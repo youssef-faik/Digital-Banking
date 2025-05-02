@@ -3,7 +3,9 @@ package com.example.digitalbanking.entities;
 import jakarta.persistence.*;
 import lombok.Data;
 
-import java.util.Date;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.List;
 
 @Entity
 @Data
@@ -12,8 +14,11 @@ import java.util.Date;
 public abstract class BankAccount {
     @Id
     private String id;
-    private double balance;
-    private Date createdAt;
-    @ManyToOne
+    private BigDecimal balance;
+    private Instant createdAt;
+    @ManyToOne(fetch = FetchType.LAZY)
     private Customer customer;
+
+    @OneToMany(mappedBy = "bankAccount", fetch = FetchType.LAZY)
+    private List<AccountOperation> accountOperations;
 }

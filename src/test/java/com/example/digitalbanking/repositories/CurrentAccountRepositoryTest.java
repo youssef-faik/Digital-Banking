@@ -8,7 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 
-import java.util.Date;
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -28,7 +29,7 @@ public class CurrentAccountRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        customer = new Customer(null, "Current Test Customer", "current.test@example.com");
+        customer = new Customer(null, "Current Test Customer", "current.test@example.com", null);
         customer = customerRepository.save(customer);
     }
 
@@ -36,15 +37,15 @@ public class CurrentAccountRepositoryTest {
     public void shouldSaveCurrentAccount() {
         CurrentAccount currentAccount = new CurrentAccount();
         currentAccount.setId(UUID.randomUUID().toString());
-        currentAccount.setBalance(1500.0);
-        currentAccount.setCreatedAt(new Date());
+        currentAccount.setBalance(new BigDecimal("1500.0"));
+        currentAccount.setCreatedAt(Instant.now());
         currentAccount.setCustomer(customer);
-        currentAccount.setOverdraft(300.0);
+        currentAccount.setOverdraft(new BigDecimal("300.0"));
 
         CurrentAccount savedAccount = currentAccountRepository.save(currentAccount);
         assertThat(savedAccount).isNotNull();
         assertThat(savedAccount.getId()).isNotNull();
-        assertThat(savedAccount.getOverdraft()).isEqualTo(300.0);
+        assertThat(savedAccount.getOverdraft()).isEqualByComparingTo(new BigDecimal("300.0"));
     }
 
     @Test
@@ -52,34 +53,34 @@ public class CurrentAccountRepositoryTest {
         CurrentAccount currentAccount = new CurrentAccount();
         String accountId = UUID.randomUUID().toString();
         currentAccount.setId(accountId);
-        currentAccount.setBalance(2500.0);
-        currentAccount.setCreatedAt(new Date());
+        currentAccount.setBalance(new BigDecimal("2500.0"));
+        currentAccount.setCreatedAt(Instant.now());
         currentAccount.setCustomer(customer);
-        currentAccount.setOverdraft(150.0);
+        currentAccount.setOverdraft(new BigDecimal("150.0"));
         currentAccountRepository.save(currentAccount);
 
         Optional<CurrentAccount> foundAccount = currentAccountRepository.findById(accountId);
         assertThat(foundAccount).isPresent();
         assertThat(foundAccount.get().getId()).isEqualTo(accountId);
-        assertThat(foundAccount.get().getBalance()).isEqualTo(2500.0);
+        assertThat(foundAccount.get().getBalance()).isEqualByComparingTo(new BigDecimal("2500.0"));
     }
 
     @Test
     public void shouldFindAllCurrentAccounts() {
         CurrentAccount account1 = new CurrentAccount();
         account1.setId(UUID.randomUUID().toString());
-        account1.setBalance(500.0);
-        account1.setCreatedAt(new Date());
+        account1.setBalance(new BigDecimal("500.0"));
+        account1.setCreatedAt(Instant.now());
         account1.setCustomer(customer);
-        account1.setOverdraft(100.0);
+        account1.setOverdraft(new BigDecimal("100.0"));
         currentAccountRepository.save(account1);
 
         CurrentAccount account2 = new CurrentAccount();
         account2.setId(UUID.randomUUID().toString());
-        account2.setBalance(750.0);
-        account2.setCreatedAt(new Date());
+        account2.setBalance(new BigDecimal("750.0"));
+        account2.setCreatedAt(Instant.now());
         account2.setCustomer(customer);
-        account2.setOverdraft(250.0);
+        account2.setOverdraft(new BigDecimal("250.0"));
         currentAccountRepository.save(account2);
 
         List<CurrentAccount> accounts = currentAccountRepository.findAll();
@@ -91,10 +92,10 @@ public class CurrentAccountRepositoryTest {
         CurrentAccount currentAccount = new CurrentAccount();
         String accountId = UUID.randomUUID().toString();
         currentAccount.setId(accountId);
-        currentAccount.setBalance(3000.0);
-        currentAccount.setCreatedAt(new Date());
+        currentAccount.setBalance(new BigDecimal("3000.0"));
+        currentAccount.setCreatedAt(Instant.now());
         currentAccount.setCustomer(customer);
-        currentAccount.setOverdraft(500.0);
+        currentAccount.setOverdraft(new BigDecimal("500.0"));
         currentAccountRepository.save(currentAccount);
 
         currentAccountRepository.deleteById(accountId);

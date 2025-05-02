@@ -7,7 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 
-import java.util.Date;
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -29,38 +30,38 @@ public class AccountOperationRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        Customer customer = new Customer(null, "Operation Test Customer", "operation.test@example.com");
+        Customer customer = new Customer(null, "Operation Test Customer", "operation.test@example.com", null);
         customer = customerRepository.save(customer);
 
         CurrentAccount currentAccount = new CurrentAccount();
         currentAccount.setId(UUID.randomUUID().toString());
-        currentAccount.setBalance(1000.0);
-        currentAccount.setCreatedAt(new Date());
+        currentAccount.setBalance(new BigDecimal("1000.0"));
+        currentAccount.setCreatedAt(Instant.now());
         currentAccount.setCustomer(customer);
-        currentAccount.setOverdraft(200.0);
+        currentAccount.setOverdraft(new BigDecimal("200.0"));
         bankAccount = bankAccountRepository.save(currentAccount);
     }
 
     @Test
     public void shouldSaveAccountOperation() {
         AccountOperation operation = new AccountOperation();
-        operation.setOperationDate(new Date());
-        operation.setAmount(100.0);
+        operation.setOperationDate(Instant.now());
+        operation.setAmount(new BigDecimal("100.0"));
         operation.setType(OperationType.CREDIT);
         operation.setBankAccount(bankAccount);
 
         AccountOperation savedOperation = accountOperationRepository.save(operation);
         assertThat(savedOperation).isNotNull();
         assertThat(savedOperation.getId()).isNotNull();
-        assertThat(savedOperation.getAmount()).isEqualTo(100.0);
+        assertThat(savedOperation.getAmount()).isEqualByComparingTo(new BigDecimal("100.0"));
         assertThat(savedOperation.getType()).isEqualTo(OperationType.CREDIT);
     }
 
     @Test
     public void shouldFindOperationById() {
         AccountOperation operation = new AccountOperation();
-        operation.setOperationDate(new Date());
-        operation.setAmount(50.0);
+        operation.setOperationDate(Instant.now());
+        operation.setAmount(new BigDecimal("50.0"));
         operation.setType(OperationType.DEBIT);
         operation.setBankAccount(bankAccount);
         AccountOperation savedOperation = accountOperationRepository.save(operation);
@@ -68,21 +69,21 @@ public class AccountOperationRepositoryTest {
         Optional<AccountOperation> foundOperation = accountOperationRepository.findById(savedOperation.getId());
         assertThat(foundOperation).isPresent();
         assertThat(foundOperation.get().getId()).isEqualTo(savedOperation.getId());
-        assertThat(foundOperation.get().getAmount()).isEqualTo(50.0);
+        assertThat(foundOperation.get().getAmount()).isEqualByComparingTo(new BigDecimal("50.0"));
     }
 
     @Test
     public void shouldFindAllOperations() {
         AccountOperation op1 = new AccountOperation();
-        op1.setOperationDate(new Date());
-        op1.setAmount(200.0);
+        op1.setOperationDate(Instant.now());
+        op1.setAmount(new BigDecimal("200.0"));
         op1.setType(OperationType.CREDIT);
         op1.setBankAccount(bankAccount);
         accountOperationRepository.save(op1);
 
         AccountOperation op2 = new AccountOperation();
-        op2.setOperationDate(new Date());
-        op2.setAmount(75.0);
+        op2.setOperationDate(Instant.now());
+        op2.setAmount(new BigDecimal("75.0"));
         op2.setType(OperationType.DEBIT);
         op2.setBankAccount(bankAccount);
         accountOperationRepository.save(op2);
@@ -94,8 +95,8 @@ public class AccountOperationRepositoryTest {
     @Test
     public void shouldDeleteOperation() {
         AccountOperation operation = new AccountOperation();
-        operation.setOperationDate(new Date());
-        operation.setAmount(150.0);
+        operation.setOperationDate(Instant.now());
+        operation.setAmount(new BigDecimal("150.0"));
         operation.setType(OperationType.CREDIT);
         operation.setBankAccount(bankAccount);
         AccountOperation savedOperation = accountOperationRepository.save(operation);

@@ -2,11 +2,19 @@ package com.example.digitalbanking.entities;
 
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
+import java.math.BigDecimal;
 
 @Entity
-@Data
+@Getter
+@Setter
+@ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
 @DiscriminatorValue("CURRENT")
 public class CurrentAccount extends BankAccount {
-    private double overdraft;
+    private BigDecimal overdraft;
 }

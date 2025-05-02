@@ -8,7 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 
-import java.util.Date;
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -28,7 +29,7 @@ public class SavingAccountRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        customer = new Customer(null, "Saving Test Customer", "saving.test@example.com");
+        customer = new Customer(null, "Saving Test Customer", "saving.test@example.com", null);
         customer = customerRepository.save(customer);
     }
 
@@ -36,15 +37,15 @@ public class SavingAccountRepositoryTest {
     public void shouldSaveSavingAccount() {
         SavingAccount savingAccount = new SavingAccount();
         savingAccount.setId(UUID.randomUUID().toString());
-        savingAccount.setBalance(3000.0);
-        savingAccount.setCreatedAt(new Date());
+        savingAccount.setBalance(new BigDecimal("3000.0"));
+        savingAccount.setCreatedAt(Instant.now());
         savingAccount.setCustomer(customer);
-        savingAccount.setInterestRate(0.03);
+        savingAccount.setInterestRate(new BigDecimal("0.03"));
 
         SavingAccount savedAccount = savingAccountRepository.save(savingAccount);
         assertThat(savedAccount).isNotNull();
         assertThat(savedAccount.getId()).isNotNull();
-        assertThat(savedAccount.getInterestRate()).isEqualTo(0.03);
+        assertThat(savedAccount.getInterestRate()).isEqualByComparingTo(new BigDecimal("0.03"));
     }
 
     @Test
@@ -52,34 +53,34 @@ public class SavingAccountRepositoryTest {
         SavingAccount savingAccount = new SavingAccount();
         String accountId = UUID.randomUUID().toString();
         savingAccount.setId(accountId);
-        savingAccount.setBalance(4000.0);
-        savingAccount.setCreatedAt(new Date());
+        savingAccount.setBalance(new BigDecimal("4000.0"));
+        savingAccount.setCreatedAt(Instant.now());
         savingAccount.setCustomer(customer);
-        savingAccount.setInterestRate(0.04);
+        savingAccount.setInterestRate(new BigDecimal("0.04"));
         savingAccountRepository.save(savingAccount);
 
         Optional<SavingAccount> foundAccount = savingAccountRepository.findById(accountId);
         assertThat(foundAccount).isPresent();
         assertThat(foundAccount.get().getId()).isEqualTo(accountId);
-        assertThat(foundAccount.get().getBalance()).isEqualTo(4000.0);
+        assertThat(foundAccount.get().getBalance()).isEqualByComparingTo(new BigDecimal("4000.0"));
     }
 
     @Test
     public void shouldFindAllSavingAccounts() {
         SavingAccount account1 = new SavingAccount();
         account1.setId(UUID.randomUUID().toString());
-        account1.setBalance(1000.0);
-        account1.setCreatedAt(new Date());
+        account1.setBalance(new BigDecimal("1000.0"));
+        account1.setCreatedAt(Instant.now());
         account1.setCustomer(customer);
-        account1.setInterestRate(0.02);
+        account1.setInterestRate(new BigDecimal("0.02"));
         savingAccountRepository.save(account1);
 
         SavingAccount account2 = new SavingAccount();
         account2.setId(UUID.randomUUID().toString());
-        account2.setBalance(2000.0);
-        account2.setCreatedAt(new Date());
+        account2.setBalance(new BigDecimal("2000.0"));
+        account2.setCreatedAt(Instant.now());
         account2.setCustomer(customer);
-        account2.setInterestRate(0.025);
+        account2.setInterestRate(new BigDecimal("0.025"));
         savingAccountRepository.save(account2);
 
         List<SavingAccount> accounts = savingAccountRepository.findAll();
@@ -91,10 +92,10 @@ public class SavingAccountRepositoryTest {
         SavingAccount savingAccount = new SavingAccount();
         String accountId = UUID.randomUUID().toString();
         savingAccount.setId(accountId);
-        savingAccount.setBalance(5000.0);
-        savingAccount.setCreatedAt(new Date());
+        savingAccount.setBalance(new BigDecimal("5000.0"));
+        savingAccount.setCreatedAt(Instant.now());
         savingAccount.setCustomer(customer);
-        savingAccount.setInterestRate(0.06);
+        savingAccount.setInterestRate(new BigDecimal("0.06"));
         savingAccountRepository.save(savingAccount);
 
         savingAccountRepository.deleteById(accountId);
