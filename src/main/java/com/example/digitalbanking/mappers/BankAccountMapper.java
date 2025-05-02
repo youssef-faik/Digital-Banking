@@ -16,7 +16,8 @@ public interface BankAccountMapper {
 
     // Customer Mapping
     CustomerDTO fromCustomer(Customer customer);
-    Customer toCustomer(CustomerDTO customerDTO);
+    // Renamed from toCustomer to match usage in CustomerServiceImpl
+    Customer fromCustomerDTO(CustomerDTO customerDTO);
 
     // SavingAccount Mapping
     @Mapping(source = "customer", target = "customerDTO") // Map nested customer
