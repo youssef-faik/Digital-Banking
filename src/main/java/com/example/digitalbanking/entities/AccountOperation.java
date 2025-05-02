@@ -1,13 +1,18 @@
 package com.example.digitalbanking.entities;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 
 @Entity
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString(exclude = "bankAccount")
+@EqualsAndHashCode(exclude = "bankAccount")
 public class AccountOperation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,7 +21,8 @@ public class AccountOperation {
     private BigDecimal amount;
     @Enumerated(EnumType.STRING)
     private OperationType type;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private BankAccount bankAccount;
+    private String description;
 }
 

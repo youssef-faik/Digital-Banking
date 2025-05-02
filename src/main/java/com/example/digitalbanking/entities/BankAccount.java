@@ -1,14 +1,19 @@
 package com.example.digitalbanking.entities;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
 @Entity
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString(exclude = {"customer", "accountOperations"})
+@EqualsAndHashCode(exclude = {"customer", "accountOperations"})
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "ACCOUNT_TYPE", length = 10)
 public abstract class BankAccount {
