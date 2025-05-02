@@ -19,6 +19,3 @@ public class AccountOperation {
     private BankAccount bankAccount;
 }
 
-enum OperationType {
-    DEBIT, CREDIT
-}
