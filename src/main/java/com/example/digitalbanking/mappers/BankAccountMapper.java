@@ -11,12 +11,15 @@ import com.example.digitalbanking.entities.AccountOperation;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring") // Integrate with Spring for dependency injection
+@Mapper(componentModel = "spring", uses = {UserMapper.class}) // Integrate with Spring and UserMapper
 public interface BankAccountMapper {
 
     // Customer Mapping
+    @Mapping(source = "appUser.username", target = "createdByUsername")
     CustomerDTO fromCustomer(Customer customer);
     // Renamed from toCustomer to match usage in CustomerServiceImpl
+    // When mapping from DTO to Entity, appUser will be set by the service
+    @Mapping(target = "appUser", ignore = true)
     Customer fromCustomerDTO(CustomerDTO customerDTO);
 
     // SavingAccount Mapping
@@ -32,6 +35,8 @@ public interface BankAccountMapper {
     CurrentAccount toCurrentAccount(CurrentAccountDTO currentAccountDTO);
 
     // AccountOperation Mapping
+    @Mapping(source = "bankAccount.id", target = "bankAccountId")
+    @Mapping(source = "appUser.username", target = "performedByUsername")
     AccountOperationDTO fromAccountOperation(AccountOperation accountOperation);
     // No need for toAccountOperation usually, as operations are created internally
 

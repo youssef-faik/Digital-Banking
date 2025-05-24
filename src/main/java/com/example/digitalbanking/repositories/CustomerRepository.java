@@ -12,6 +12,15 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
     @Query("select c from Customer c where lower(c.name) like lower(:kw)")
     Page<Customer> searchCustomerByName(@Param("kw") String keyword, Pageable pageable);
 
+    // Method to find customers by AppUser
+    Page<Customer> findByAppUser(com.example.digitalbanking.entities.AppUser appUser, Pageable pageable);
+
+    // Method to find customers by AppUser and name containing keyword (case-insensitive)
+    Page<Customer> findByAppUserAndNameContainingIgnoreCase(com.example.digitalbanking.entities.AppUser appUser, String nameKeyword, Pageable pageable);
+
+    // Method to find customers by AppUser and email containing keyword (case-insensitive)
+    Page<Customer> findByAppUserAndEmailContainingIgnoreCase(com.example.digitalbanking.entities.AppUser appUser, String emailKeyword, Pageable pageable);
+
     // Optional: If you need a simple list search without pagination
     // List<Customer> findByNameContainingIgnoreCase(String keyword);
 }

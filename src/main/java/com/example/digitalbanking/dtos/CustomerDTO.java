@@ -12,4 +12,5 @@ public class CustomerDTO {
     @NotEmpty(message = "Customer email cannot be empty")
     @Email(message = "Email format is not valid")
     private String email;
+    private String createdByUsername; // Add username of the creator/owner
 }

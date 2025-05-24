@@ -10,7 +10,7 @@ import com.example.digitalbanking.mappers.BankAccountMapper;
 import com.example.digitalbanking.repositories.AccountOperationRepository;
 import com.example.digitalbanking.repositories.BankAccountRepository;
 import com.example.digitalbanking.repositories.CustomerRepository;
-import lombok.AllArgsConstructor;
+import com.example.digitalbanking.repositories.AppUserRepository; // Import AppUserRepository
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,74 +22,140 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.access.AccessDeniedException;
 
 @Service
 @Transactional
-@AllArgsConstructor // Constructor injection for dependencies
-@Slf4j // Lombok annotation for logging
+@Slf4j
 public class BankAccountServiceImpl implements BankAccountService {
 
     private final CustomerRepository customerRepository;
     private final BankAccountRepository bankAccountRepository;
     private final AccountOperationRepository accountOperationRepository;
-    private final BankAccountMapper dtoMapper; // Renamed for clarity
+    private final BankAccountMapper dtoMapper;
+    private final AppUserRepository appUserRepository;
+
+    public BankAccountServiceImpl(CustomerRepository customerRepository,
+                                  BankAccountRepository bankAccountRepository,
+                                  AccountOperationRepository accountOperationRepository,
+                                  BankAccountMapper dtoMapper,
+                                  AppUserRepository appUserRepository) {
+        this.customerRepository = customerRepository;
+        this.bankAccountRepository = bankAccountRepository;
+        this.accountOperationRepository = accountOperationRepository;
+        this.dtoMapper = dtoMapper;
+        this.appUserRepository = appUserRepository;
+    }
+
+    private AppUser getCurrentAuthenticatedAppUser() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return appUserRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Authenticated user not found: " + username));
+    }
+
+    private void checkCustomerOwnership(Customer customer, AppUser appUser) {
+        if (customer.getAppUser() == null || !customer.getAppUser().getUserId().equals(appUser.getUserId())) {
+            log.warn("User {} attempted to access or modify resources for customer {} owned by a different user or with no owner.", appUser.getUsername(), customer.getId());
+            throw new AccessDeniedException("You do not have permission to access or modify resources for this customer.");
+        }
+    }
+    
+    private void checkBankAccountOwnership(BankAccount bankAccount, AppUser appUser) {
+        if (bankAccount.getCustomer() == null || bankAccount.getCustomer().getAppUser() == null || 
+            !bankAccount.getCustomer().getAppUser().getUserId().equals(appUser.getUserId())) {
+            log.warn("User {} attempted to access or modify bank account {} owned by a different user or with no owner.", appUser.getUsername(), bankAccount.getId());
+            throw new AccessDeniedException("You do not have permission to access or modify this bank account.");
+        }
+    }
 
     @Override
     public CustomerDTO saveCustomer(CustomerDTO customerDTO) {
-        log.info("Saving new Customer via BankAccountService"); // Added context to log
-        // Corrected method name from toCustomer to fromCustomerDTO
+        // This method is now primarily handled by CustomerServiceImpl for direct customer creation.
+        // If called via BankAccountService, it implies a customer creation in the context of banking operations.
+        log.info("Saving new Customer via BankAccountService (delegating to user-specific logic)");
+        AppUser currentUser = getCurrentAuthenticatedAppUser();
         Customer customer = dtoMapper.fromCustomerDTO(customerDTO);
+        customer.setAppUser(currentUser); // Associate with current user
         Customer savedCustomer = customerRepository.save(customer);
         return dtoMapper.fromCustomer(savedCustomer);
     }
 
     @Override
     public CustomerDTO getCustomer(Long customerId) {
-        log.info("Fetching customer with ID: {}", customerId);
+        log.info("Fetching customer with ID: {} via BankAccountService", customerId);
+        AppUser currentUser = getCurrentAuthenticatedAppUser();
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new CustomerNotFoundException("Customer Not found"));
+        checkCustomerOwnership(customer, currentUser);
         return dtoMapper.fromCustomer(customer);
-    }
-
-    @Override // Corrected signature to match interface (added Pageable, returns Page)
-    public Page<CustomerDTO> listCustomers(Pageable pageable) {
-        log.info("Fetching customers page: {} size: {}", pageable.getPageNumber(), pageable.getPageSize());
-        Page<Customer> customers = customerRepository.findAll(pageable);
-        return customers.map(dtoMapper::fromCustomer);
     }
 
     @Override
     public CustomerDTO updateCustomer(Long customerId, CustomerDTO customerDTO) {
-        log.info("Updating customer with ID: {}", customerId);
+        log.info("Updating customer with ID: {} via BankAccountService", customerId);
+        AppUser currentUser = getCurrentAuthenticatedAppUser();
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new CustomerNotFoundException("Customer Not found"));
+        checkCustomerOwnership(customer, currentUser);
+        
         // Update fields from DTO
         customer.setName(customerDTO.getName());
         customer.setEmail(customerDTO.getEmail());
+        // appUser association remains the same (owner doesn't change via this method)
         Customer updatedCustomer = customerRepository.save(customer);
         return dtoMapper.fromCustomer(updatedCustomer);
     }
 
     @Override
-    public BankAccountDTO getBankAccount(String accountId) {
-         log.info("Fetching bank account with ID: {}", accountId);
-         BankAccount bankAccount = bankAccountRepository.findById(accountId)
-                .orElseThrow(() -> new BankAccountNotFoundException("BankAccount not found"));
+    public void deleteCustomer(Long customerId) {
+        log.info("Attempting to delete customer with ID: {} via BankAccountService", customerId);
+        AppUser currentUser = getCurrentAuthenticatedAppUser();
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new CustomerNotFoundException("Customer Not found with ID: " + customerId));
+        checkCustomerOwnership(customer, currentUser);
 
-         // Map based on actual type
-         if (bankAccount instanceof SavingAccount savingAccount) {
-             return dtoMapper.fromSavingAccount(savingAccount);
-         } else if (bankAccount instanceof CurrentAccount currentAccount) {
-             return dtoMapper.fromCurrentAccount(currentAccount);
-         }
-         // Should not happen with current setup, but handle defensively
-         throw new BankAccountNotFoundException("Unknown BankAccount type for ID: " + accountId);
+        if (bankAccountRepository.existsByCustomerId(customerId)) {
+            throw new CustomerDeletionException("Cannot delete customer with ID: " + customerId + " because they have associated bank accounts.");
+        }
+        customerRepository.deleteById(customerId);
+        log.info("Customer deleted successfully: {}", customerId);
+    }
+
+    @Override
+    public Page<CustomerDTO> listCustomers(Pageable pageable) {
+        // In BankAccountService context, this should list customers relevant to the authenticated user.
+        AppUser currentUser = getCurrentAuthenticatedAppUser();
+        log.info("Listing customers for user: {}", currentUser.getUsername());
+        Page<Customer> customers = customerRepository.findByAppUser(currentUser, pageable);
+        return customers.map(dtoMapper::fromCustomer);
+    }
+
+    @Override
+    public BankAccountDTO getBankAccount(String accountId) {
+        log.info("Fetching bank account with ID: {}", accountId);
+        AppUser currentUser = getCurrentAuthenticatedAppUser();
+        BankAccount bankAccount = bankAccountRepository.findById(accountId)
+                .orElseThrow(() -> new BankAccountNotFoundException("BankAccount not found"));
+        checkBankAccountOwnership(bankAccount, currentUser);
+
+        if (bankAccount instanceof SavingAccount savingAccount) {
+            return dtoMapper.fromSavingAccount(savingAccount);
+        } else if (bankAccount instanceof CurrentAccount currentAccount) {
+            return dtoMapper.fromCurrentAccount(currentAccount);
+        }
+        throw new BankAccountNotFoundException("Unknown BankAccount type for ID: " + accountId);
     }
 
     @Override
     public CurrentAccountDTO saveCurrentBankAccount(double initialBalance, double overDraft, Long customerId) {
         log.info("Saving new Current Account for customer ID: {}", customerId);
-        Customer customer = customerRepository.findById(customerId).orElseThrow(() -> new CustomerNotFoundException("Customer not found"));
+        AppUser currentUser = getCurrentAuthenticatedAppUser();
+        Customer customer = customerRepository.findById(customerId)
+            .orElseThrow(() -> new CustomerNotFoundException("Customer not found"));
+        checkCustomerOwnership(customer, currentUser); // Ensure user owns the customer for whom account is created
+
         CurrentAccount currentAccount = new CurrentAccount();
         currentAccount.setId(UUID.randomUUID().toString());
         currentAccount.setCreatedAt(Instant.now());
@@ -102,8 +168,12 @@ public class BankAccountServiceImpl implements BankAccountService {
 
     @Override
     public SavingAccountDTO saveSavingBankAccount(double initialBalance, double interestRate, Long customerId) {
-         log.info("Saving new Saving Account for customer ID: {}", customerId);
-        Customer customer = customerRepository.findById(customerId).orElseThrow(() -> new CustomerNotFoundException("Customer not found"));
+        log.info("Saving new Saving Account for customer ID: {}", customerId);
+        AppUser currentUser = getCurrentAuthenticatedAppUser();
+        Customer customer = customerRepository.findById(customerId)
+            .orElseThrow(() -> new CustomerNotFoundException("Customer not found"));
+        checkCustomerOwnership(customer, currentUser); // Ensure user owns the customer
+
         SavingAccount savingAccount = new SavingAccount();
         savingAccount.setId(UUID.randomUUID().toString());
         savingAccount.setCreatedAt(Instant.now());
@@ -114,15 +184,16 @@ public class BankAccountServiceImpl implements BankAccountService {
         return dtoMapper.fromSavingAccount(savedBankAccount);
     }
 
-
-    @Override // Corrected signature to match interface (added Pageable, returns Page)
+    @Override
     public Page<BankAccountDTO> bankAccountList(Pageable pageable) {
-        log.info("Fetching bank accounts page: {} size: {}", pageable.getPageNumber(), pageable.getPageSize());
-        Page<BankAccount> bankAccounts = bankAccountRepository.findAll(pageable);
+        // This should list accounts for customers owned by the authenticated user.
+        AppUser currentUser = getCurrentAuthenticatedAppUser();
+        log.info("Fetching bank accounts for user: {}", currentUser.getUsername());
+        Page<BankAccount> bankAccounts = bankAccountRepository.findByCustomerAppUser(currentUser, pageable);
         return bankAccounts.map(bankAccount -> {
             if (bankAccount instanceof SavingAccount sa) {
                 return dtoMapper.fromSavingAccount(sa);
-            } else { // Must be CurrentAccount
+            } else {
                 return dtoMapper.fromCurrentAccount((CurrentAccount) bankAccount);
             }
         });
@@ -131,8 +202,10 @@ public class BankAccountServiceImpl implements BankAccountService {
     @Override
     public void debit(DebitDTO debitDTO) {
         log.info("Processing debit operation: {}", debitDTO);
+        AppUser currentUser = getCurrentAuthenticatedAppUser();
         BankAccount bankAccount = bankAccountRepository.findById(debitDTO.getAccountId())
                 .orElseThrow(() -> new BankAccountNotFoundException("BankAccount not found"));
+        checkBankAccountOwnership(bankAccount, currentUser); // Check ownership before operation
 
         BigDecimal amount = debitDTO.getAmount();
         if (bankAccount.getBalance().compareTo(amount) < 0) {
@@ -144,18 +217,21 @@ public class BankAccountServiceImpl implements BankAccountService {
         accountOperation.setAmount(amount);
         accountOperation.setOperationDate(Instant.now());
         accountOperation.setBankAccount(bankAccount);
-        // Consider adding description from DTO if needed in the operation entity
+        accountOperation.setDescription(debitDTO.getDescription());
+        accountOperation.setAppUser(currentUser); // Tag operation with the user who performed it
         accountOperationRepository.save(accountOperation);
 
         bankAccount.setBalance(bankAccount.getBalance().subtract(amount));
-        bankAccountRepository.save(bankAccount); // Balance update
+        bankAccountRepository.save(bankAccount);
     }
 
     @Override
     public void credit(CreditDTO creditDTO) {
         log.info("Processing credit operation: {}", creditDTO);
+        AppUser currentUser = getCurrentAuthenticatedAppUser();
         BankAccount bankAccount = bankAccountRepository.findById(creditDTO.getAccountId())
                 .orElseThrow(() -> new BankAccountNotFoundException("BankAccount not found"));
+        checkBankAccountOwnership(bankAccount, currentUser); // Check ownership
 
         BigDecimal amount = creditDTO.getAmount();
 
@@ -164,55 +240,56 @@ public class BankAccountServiceImpl implements BankAccountService {
         accountOperation.setAmount(amount);
         accountOperation.setOperationDate(Instant.now());
         accountOperation.setBankAccount(bankAccount);
-        // Consider adding description from DTO if needed
+        accountOperation.setDescription(creditDTO.getDescription());
+        accountOperation.setAppUser(currentUser);
         accountOperationRepository.save(accountOperation);
 
         bankAccount.setBalance(bankAccount.getBalance().add(amount));
-        bankAccountRepository.save(bankAccount); // Balance update
+        bankAccountRepository.save(bankAccount);
     }
 
     @Override
     public void transfer(TransferRequestDTO transferRequestDTO) {
         log.info("Processing transfer operation: {}", transferRequestDTO);
-        // Perform debit on source account
-        debit(new DebitDTO(
+        AppUser currentUser = getCurrentAuthenticatedAppUser();
+        
+        BankAccount sourceAccount = bankAccountRepository.findById(transferRequestDTO.getAccountSourceId())
+            .orElseThrow(() -> new BankAccountNotFoundException("Source BankAccount not found"));
+        BankAccount destinationAccount = bankAccountRepository.findById(transferRequestDTO.getAccountDestinationId())
+            .orElseThrow(() -> new BankAccountNotFoundException("Destination BankAccount not found"));
+            
+        checkBankAccountOwnership(sourceAccount, currentUser); // User must own the source account
+        // For transfers, ownership of destination account might not be required by the same user,
+        // but the operation itself is initiated by the current user.
+
+        // Debit from source
+        DebitDTO debitInfo = new DebitDTO(
                 transferRequestDTO.getAccountSourceId(),
                 transferRequestDTO.getAmount(),
-                transferRequestDTO.getDescription() != null ? transferRequestDTO.getDescription() : "Transfer"
-        ));
-        // Perform credit on destination account
-        credit(new CreditDTO(
+                "Transfer to " + transferRequestDTO.getAccountDestinationId() + ": " + transferRequestDTO.getDescription()
+        );
+        debit(debitInfo); // This will call the enhanced debit method with ownership checks and user tagging
+
+        // Credit to destination
+        CreditDTO creditInfo = new CreditDTO(
                 transferRequestDTO.getAccountDestinationId(),
                 transferRequestDTO.getAmount(),
-                transferRequestDTO.getDescription() != null ? transferRequestDTO.getDescription() : "Transfer"
-        ));
-        // Note: This is not truly atomic. For production, consider Saga pattern or two-phase commit if needed.
+                "Transfer from " + transferRequestDTO.getAccountSourceId() + ": " + transferRequestDTO.getDescription()
+        );
+        // The credit operation will be tagged with the current user, even if they don't own the destination account's customer.
+        // This is typical for transfers. If stricter rules are needed, add checks for destination account ownership here.
+        credit(creditInfo); 
     }
 
     @Override
     public Page<AccountOperationDTO> getAccountHistory(String accountId, Pageable pageable) {
         log.info("Fetching account history for account ID: {} page: {} size: {}", accountId, pageable.getPageNumber(), pageable.getPageSize());
-        // Check if account exists first
-        if (!bankAccountRepository.existsById(accountId)) {
-            throw new BankAccountNotFoundException("BankAccount not found with ID: " + accountId);
-        }
+        AppUser currentUser = getCurrentAuthenticatedAppUser();
+        BankAccount bankAccount = bankAccountRepository.findById(accountId)
+            .orElseThrow(() -> new BankAccountNotFoundException("BankAccount not found with ID: " + accountId));
+        checkBankAccountOwnership(bankAccount, currentUser);
+        
         Page<AccountOperation> operations = accountOperationRepository.findByBankAccountIdOrderByOperationDateDesc(accountId, pageable);
         return operations.map(dtoMapper::fromAccountOperation);
-    }
-
-    @Override
-    public void deleteCustomer(Long customerId) {
-        log.info("Attempting to delete customer with ID: {}", customerId);
-        // Check if customer exists
-        if (!customerRepository.existsById(customerId)) {
-            throw new CustomerNotFoundException("Customer Not found with ID: " + customerId);
-        }
-        // Check if customer has associated bank accounts
-        if (bankAccountRepository.existsByCustomerId(customerId)) {
-            throw new CustomerDeletionException("Cannot delete customer with ID: " + customerId + " because they have associated bank accounts.");
-        }
-        // Proceed with deletion
-        customerRepository.deleteById(customerId);
-        log.info("Customer deleted successfully: {}", customerId);
     }
 }

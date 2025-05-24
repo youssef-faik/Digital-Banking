@@ -12,9 +12,7 @@ public class AccountOperationDTO {
     private Instant operationDate;
     private BigDecimal amount;
     private OperationType type;
-    private String description; // Added description field
-    // Note: We might not always need the full BankAccountDTO here, 
-    // depending on the context (e.g., when listing operations for a specific account).
-    // For simplicity now, we omit it, but it could be added if needed.
-    // private String bankAccountId; // Alternatively, just include the ID
+    private String description;
+    private String bankAccountId; // Keep it simple for the DTO
+    private String performedByUsername; // Add username of the performer
 }

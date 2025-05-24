@@ -11,8 +11,8 @@ import java.time.Instant;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = "bankAccount")
-@EqualsAndHashCode(exclude = "bankAccount")
+@ToString(exclude = {"bankAccount", "appUser"})
+@EqualsAndHashCode(exclude = {"bankAccount", "appUser"})
 public class AccountOperation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,5 +24,8 @@ public class AccountOperation {
     @ManyToOne(fetch = FetchType.LAZY)
     private BankAccount bankAccount;
     private String description;
+    @ManyToOne // Added AppUser association
+    @JoinColumn(name = "user_id") // Explicitly name the foreign key column
+    private AppUser appUser; // User who performed or is related to the operation
 }
 
