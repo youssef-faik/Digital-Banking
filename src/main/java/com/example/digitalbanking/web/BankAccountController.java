@@ -1,5 +1,6 @@
 package com.example.digitalbanking.web;
 
+import com.example.digitalbanking.dtos.AccountHistoryDTO;
 import com.example.digitalbanking.dtos.BankAccountDTO;
 import com.example.digitalbanking.dtos.CreateCurrentAccountRequestDTO;
 import com.example.digitalbanking.dtos.CurrentAccountDTO;
@@ -120,13 +121,14 @@ public class BankAccountController {
     }
 
     @GetMapping("/{accountId}/operations")
-    public ResponseEntity<Page<AccountOperationDTO>> getAccountOperations(
+    public ResponseEntity<AccountHistoryDTO> getAccountOperations( // Updated return type
             @PathVariable String accountId,
             Pageable pageable) {
         log.info("REST request to get operations for account ID: {}", accountId);
         try {
-            Page<AccountOperationDTO> page = bankAccountService.getAccountHistory(accountId, pageable);
-            return ResponseEntity.ok(page);
+            // Updated to call with page number and size, and to match the new return type
+            AccountHistoryDTO history = bankAccountService.getAccountHistory(accountId, pageable.getPageNumber(), pageable.getPageSize());
+            return ResponseEntity.ok(history);
         } catch (BankAccountNotFoundException e) {
             log.warn("Bank account not found when fetching operations: {}", e.getMessage());
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Bank account not found: " + accountId, e);

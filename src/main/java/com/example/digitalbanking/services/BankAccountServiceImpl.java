@@ -13,13 +13,21 @@ import com.example.digitalbanking.repositories.CustomerRepository;
 import com.example.digitalbanking.repositories.AppUserRepository; // Import AppUserRepository
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest; // Added for PageRequest
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate; // Added for LocalDate
+import java.time.ZoneId; // Added for ZoneId
+import java.time.temporal.ChronoUnit; // Added for ChronoUnit
+import java.util.ArrayList; // Added for ArrayList
+import java.util.List; // Added for List (already implicitly via DTOs but good to have)
+import java.util.Map; // Added for Map
 import java.util.UUID;
+import java.util.stream.Collectors; // Added for Collectors
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.access.AccessDeniedException;
@@ -301,52 +309,83 @@ public class BankAccountServiceImpl implements BankAccountService {
     }
 
     @Override
-    public Page<AccountOperationDTO> getAccountHistory(String accountId, Pageable pageable) {
-        log.info("Fetching account history for account ID: {} page: {} size: {}", accountId, pageable.getPageNumber(), pageable.getPageSize());
+    public AccountHistoryDTO getAccountHistory(String accountId, int page, int size) {
+        log.info("Fetching account history for account ID: {} by user: {}", accountId, getCurrentAuthenticatedAppUser().getUsername());
         AppUser currentUser = getCurrentAuthenticatedAppUser();
         BankAccount bankAccount = bankAccountRepository.findById(accountId)
-            .orElseThrow(() -> new BankAccountNotFoundException("BankAccount not found with ID: " + accountId));
-        checkBankAccountOwnership(bankAccount, currentUser);
-        
-        Page<AccountOperation> operations = accountOperationRepository.findByBankAccountIdOrderByOperationDateDesc(accountId, pageable);
-        return operations.map(dtoMapper::fromAccountOperation);
+                .orElseThrow(() -> new BankAccountNotFoundException("Account not Found"));
+        checkBankAccountOwnership(bankAccount, currentUser); // Ensure user owns the account
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<AccountOperation> accountOperations = accountOperationRepository.findByBankAccountIdOrderByOperationDateDesc(accountId, pageable);
+        List<AccountOperationDTO> accountOperationDTOS = accountOperations.getContent().stream()
+                .map(dtoMapper::fromAccountOperation)
+                .collect(Collectors.toList());
+
+        AccountHistoryDTO accountHistoryDTO = new AccountHistoryDTO();
+        accountHistoryDTO.setAccountId(bankAccount.getId());
+        accountHistoryDTO.setBalance(bankAccount.getBalance());
+        accountHistoryDTO.setCurrentPage(page);
+        accountHistoryDTO.setPageSize(size);
+        accountHistoryDTO.setTotalPages(accountOperations.getTotalPages());
+        accountHistoryDTO.setAccountOperationDTOS(accountOperationDTOS);
+        return accountHistoryDTO;
     }
 
     @Override
     public DashboardStatsDTO getDashboardStats() {
-        log.info("Fetching dashboard statistics for user: {}", getCurrentAuthenticatedAppUser().getUsername());
         AppUser currentUser = getCurrentAuthenticatedAppUser();
+        log.info("Fetching dashboard stats for user: {}", currentUser.getUsername());
 
         long totalCustomers = customerRepository.countByAppUser(currentUser);
         long totalAccounts = bankAccountRepository.countByCustomerAppUser(currentUser);
-        
-        // Calculate total balance across all accounts for the current user
-        // This requires a custom query or iterating through accounts if not directly supported
-        // For simplicity, let's assume a method in the repository or iterate if small scale
-        // If you have many accounts, a custom query in BankAccountRepository would be more efficient.
-        BigDecimal totalBalance = BigDecimal.ZERO;
-        // Iterable<BankAccount> userAccounts = bankAccountRepository.findByCustomerAppUser(currentUser); // This would need a non-paginated version
-        // For a large number of accounts, this iteration is not efficient.
-        // A more performant way would be a custom query in BankAccountRepository:
-        // @Query("SELECT SUM(b.balance) FROM BankAccount b WHERE b.customer.appUser = :user")
-        // BigDecimal sumBalance(@Param("user") AppUser user);
-        // For now, let's use a simpler approach if the number of accounts per user is manageable,
-        // or acknowledge this as a point for optimization.
-        // Considering the current structure, we might need to fetch all accounts and sum them up.
-        // This is not ideal for performance with many accounts.
-        // Let's assume for now we will iterate, but be mindful of performance implications.
-        Iterable<BankAccount> userAccounts = bankAccountRepository.findAllByCustomerAppUser(currentUser); // Assuming this method exists or is added
-        for (BankAccount account : userAccounts) {
-            totalBalance = totalBalance.add(account.getBalance());
-        }
-
         long totalOperations = accountOperationRepository.countByAppUser(currentUser);
 
+        // Calculate total balance for the user
+        // This could be optimized with a custom query in BankAccountRepository if performance becomes an issue
+        List<BankAccount> userAccounts = bankAccountRepository.findAllByCustomerAppUser(currentUser);
+        BigDecimal totalBalance = userAccounts.stream()
+                .map(BankAccount::getBalance)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         return new DashboardStatsDTO(
-            totalCustomers,
-            totalAccounts,
-            totalBalance,
-            totalOperations
+                totalCustomers,
+                totalAccounts,
+                totalOperations,
+                totalBalance
         );
+    }
+
+    @Override
+    public DashboardChartDataDTO getDashboardChartData() {
+        AppUser currentUser = getCurrentAuthenticatedAppUser();
+        log.info("Fetching dashboard chart data for user: {}", currentUser.getUsername());
+
+        // Example: Operations trend for the last 7 days
+        Instant sevenDaysAgo = Instant.now().minus(7, ChronoUnit.DAYS);
+        List<AccountOperation> recentOperations = accountOperationRepository
+                .findByAppUserAndOperationDateAfterOrderByOperationDateAsc(currentUser, sevenDaysAgo);
+
+        Map<LocalDate, Double> dailyTotals = recentOperations.stream()
+                .collect(Collectors.groupingBy(
+                        op -> op.getOperationDate().atZone(ZoneId.systemDefault()).toLocalDate(),
+                        Collectors.summingDouble(op -> op.getAmount().doubleValue()) // Summing amounts
+                ));
+
+        List<DataPointDTO> operationsTrend = dailyTotals.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(entry -> new DataPointDTO(entry.getKey().toString(), entry.getValue()))
+                .collect(Collectors.toList());
+
+        // Example: Account type distribution (Current vs Saving)
+        List<BankAccount> userAccounts = bankAccountRepository.findAllByCustomerAppUser(currentUser);
+        long currentAccountsCount = userAccounts.stream().filter(acc -> acc instanceof CurrentAccount).count();
+        long savingAccountsCount = userAccounts.stream().filter(acc -> acc instanceof SavingAccount).count();
+
+        List<DataPointDTO> accountTypeDistribution = new ArrayList<>();
+        accountTypeDistribution.add(new DataPointDTO("Current Accounts", (double) currentAccountsCount));
+        accountTypeDistribution.add(new DataPointDTO("Saving Accounts", (double) savingAccountsCount));
+
+        return new DashboardChartDataDTO(operationsTrend, accountTypeDistribution);
     }
 }

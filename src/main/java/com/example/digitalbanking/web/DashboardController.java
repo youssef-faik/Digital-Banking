@@ -1,6 +1,7 @@
 package com.example.digitalbanking.web;
 
 import com.example.digitalbanking.dtos.DashboardStatsDTO;
+import com.example.digitalbanking.dtos.DashboardChartDataDTO; // Added import
 import com.example.digitalbanking.services.BankAccountService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -39,5 +40,22 @@ public class DashboardController {
         log.info("REST request to get dashboard statistics");
         DashboardStatsDTO stats = bankAccountService.getDashboardStats();
         return ResponseEntity.ok(stats);
+    }
+
+    @Operation(summary = "Get Dashboard Chart Data", description = "Retrieves data formatted for charts on the authenticated user's dashboard, such as operation trends and account type distributions.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved dashboard chart data",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = DashboardChartDataDTO.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated",
+                    content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error while fetching chart data",
+                    content = @Content)
+    })
+    @GetMapping("/chart-data")
+    public ResponseEntity<DashboardChartDataDTO> getDashboardChartData() {
+        log.info("REST request to get dashboard chart data");
+        DashboardChartDataDTO chartData = bankAccountService.getDashboardChartData();
+        return ResponseEntity.ok(chartData);
     }
 }

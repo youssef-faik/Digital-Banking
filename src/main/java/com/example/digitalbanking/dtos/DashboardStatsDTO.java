@@ -12,10 +12,6 @@ import java.math.BigDecimal;
 public class DashboardStatsDTO {
     private long totalCustomers;
     private long totalAccounts;
-    private BigDecimal totalBalanceAllAccounts;
     private long totalOperations;
-    // Add more stats as needed, for example:
-    // private long activeUsersToday;
-    // private long newCustomersThisMonth;
-    // private BigDecimal averageTransactionAmount;
+    private BigDecimal totalBalance; // Corrected field name to match constructor usage
 }

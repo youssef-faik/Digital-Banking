@@ -62,16 +62,17 @@ public class BankAccountRestController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved account history",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = Page.class))), // Note: Schema might need refinement for Page<AccountOperationDTO>
+                            schema = @Schema(implementation = AccountHistoryDTO.class))), // Updated schema
             @ApiResponse(responseCode = "404", description = "Bank account not found",
                     content = @Content)
     })
     @GetMapping("/{accountId}/operations")
-    public ResponseEntity<Page<AccountOperationDTO>> getAccountHistory(
+    public ResponseEntity<AccountHistoryDTO> getAccountHistory( // Updated return type
             @Parameter(description = "ID of the bank account", required = true, example = "a1b2c3d4-e5f6-7890-1234-567890abcdef") @PathVariable String accountId,
             @ParameterObject Pageable pageable) {
         log.info("REST request to get account history for accountId: {}", accountId);
-        Page<AccountOperationDTO> history = bankAccountService.getAccountHistory(accountId, pageable);
+        // Updated to pass page number and size, and to match the new return type
+        AccountHistoryDTO history = bankAccountService.getAccountHistory(accountId, pageable.getPageNumber(), pageable.getPageSize());
         return ResponseEntity.ok(history);
     }
 

@@ -23,6 +23,8 @@ public interface BankAccountService {
     void credit(CreditDTO creditDTO);
     void transfer(TransferRequestDTO transferRequestDTO);
 
-    Page<AccountOperationDTO> getAccountHistory(String accountId, Pageable pageable);
+    // Corrected signature to match implementation
+    AccountHistoryDTO getAccountHistory(String accountId, int page, int size);
     DashboardStatsDTO getDashboardStats(); // New method for dashboard statistics
+    DashboardChartDataDTO getDashboardChartData(); // New method for dashboard chart data
 }
