@@ -5,7 +5,12 @@ import com.example.digitalbanking.dtos.CreateCurrentAccountRequestDTO;
 import com.example.digitalbanking.dtos.CurrentAccountDTO;
 import com.example.digitalbanking.dtos.CreateSavingAccountRequestDTO;
 import com.example.digitalbanking.dtos.SavingAccountDTO;
+import com.example.digitalbanking.dtos.AccountOperationDTO;
+import com.example.digitalbanking.dtos.DebitDTO;
+import com.example.digitalbanking.dtos.CreditDTO;
+import com.example.digitalbanking.dtos.TransferRequestDTO;
 import com.example.digitalbanking.exceptions.BankAccountNotFoundException;
+import com.example.digitalbanking.exceptions.BalanceNotSufficientException;
 import com.example.digitalbanking.exceptions.CustomerNotFoundException;
 import com.example.digitalbanking.services.BankAccountService;
 import jakarta.validation.Valid;
@@ -15,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -104,9 +110,92 @@ public class BankAccountController {
         } catch (CustomerNotFoundException e) {
             log.warn("Customer not found when listing accounts: {}", e.getMessage());
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found: " + customerId, e);
+        } catch (AccessDeniedException e) {
+            log.warn("Access denied when listing accounts for customer ID {}: {}", customerId, e.getMessage());
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage(), e);
         } catch (RuntimeException e) {
             log.error("Error listing accounts for customer ID {}: {}", customerId, e.getMessage());
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error listing accounts for customer", e);
+        }
+    }
+
+    @GetMapping("/{accountId}/operations")
+    public ResponseEntity<Page<AccountOperationDTO>> getAccountOperations(
+            @PathVariable String accountId,
+            Pageable pageable) {
+        log.info("REST request to get operations for account ID: {}", accountId);
+        try {
+            Page<AccountOperationDTO> page = bankAccountService.getAccountHistory(accountId, pageable);
+            return ResponseEntity.ok(page);
+        } catch (BankAccountNotFoundException e) {
+            log.warn("Bank account not found when fetching operations: {}", e.getMessage());
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Bank account not found: " + accountId, e);
+        } catch (AccessDeniedException e) {
+            log.warn("Access denied when fetching operations for account ID {}: {}", accountId, e.getMessage());
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage(), e);
+        } catch (RuntimeException e) {
+            log.error("Error fetching operations for account ID {}: {}", accountId, e.getMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error fetching account operations", e);
+        }
+    }
+
+    @PostMapping("/debit")
+    public ResponseEntity<Void> debit(@Valid @RequestBody DebitDTO debitDTO) {
+        log.info("REST request to debit account: {}", debitDTO);
+        try {
+            bankAccountService.debit(debitDTO);
+            return ResponseEntity.ok().build();
+        } catch (BankAccountNotFoundException e) {
+            log.warn("Bank account not found for debit: {}", e.getMessage());
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage(), e);
+        } catch (BalanceNotSufficientException e) {
+            log.warn("Balance not sufficient for debit: {}", e.getMessage());
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+        } catch (AccessDeniedException e) {
+            log.warn("Access denied for debit operation: {}", e.getMessage());
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage(), e);
+        } catch (RuntimeException e) {
+            log.error("Error processing debit: {}", e.getMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error processing debit operation", e);
+        }
+    }
+
+    @PostMapping("/credit")
+    public ResponseEntity<Void> credit(@Valid @RequestBody CreditDTO creditDTO) {
+        log.info("REST request to credit account: {}", creditDTO);
+        try {
+            bankAccountService.credit(creditDTO);
+            return ResponseEntity.ok().build();
+        } catch (BankAccountNotFoundException e) {
+            log.warn("Bank account not found for credit: {}", e.getMessage());
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage(), e);
+        } catch (AccessDeniedException e) {
+            log.warn("Access denied for credit operation: {}", e.getMessage());
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage(), e);
+        } catch (RuntimeException e) {
+            log.error("Error processing credit: {}", e.getMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error processing credit operation", e);
+        }
+    }
+
+    @PostMapping("/transfer")
+    public ResponseEntity<Void> transfer(@Valid @RequestBody TransferRequestDTO transferRequestDTO) {
+        log.info("REST request to transfer funds: {}", transferRequestDTO);
+        try {
+            bankAccountService.transfer(transferRequestDTO);
+            return ResponseEntity.ok().build();
+        } catch (BankAccountNotFoundException e) {
+            log.warn("Bank account not found for transfer: {}", e.getMessage());
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage(), e);
+        } catch (BalanceNotSufficientException e) {
+            log.warn("Balance not sufficient for transfer: {}", e.getMessage());
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+        } catch (AccessDeniedException e) {
+            log.warn("Access denied for transfer operation: {}", e.getMessage());
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage(), e);
+        } catch (RuntimeException e) {
+            log.error("Error processing transfer: {}", e.getMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error processing transfer operation. Please try again later.", e);
         }
     }
 }

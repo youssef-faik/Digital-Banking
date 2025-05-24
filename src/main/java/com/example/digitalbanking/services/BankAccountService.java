@@ -1,13 +1,9 @@
 package com.example.digitalbanking.services;
 
 import com.example.digitalbanking.dtos.*;
-import com.example.digitalbanking.exceptions.BalanceNotSufficientException;
-import com.example.digitalbanking.exceptions.BankAccountNotFoundException;
-import com.example.digitalbanking.exceptions.CustomerNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 
 public interface BankAccountService {
     CustomerDTO saveCustomer(CustomerDTO customerDTO);

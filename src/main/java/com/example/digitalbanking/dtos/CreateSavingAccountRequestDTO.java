@@ -1,7 +1,6 @@
 package com.example.digitalbanking.dtos;
 
 import lombok.Data;
-import java.math.BigDecimal;
 
 @Data
 public class CreateSavingAccountRequestDTO {
