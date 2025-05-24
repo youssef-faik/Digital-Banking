@@ -200,6 +200,27 @@ public class BankAccountServiceImpl implements BankAccountService {
     }
 
     @Override
+    public Page<BankAccountDTO> listAccountsByCustomer(Long customerId, Pageable pageable) {
+        log.info("Fetching bank accounts for customer ID: {} by user: {}", customerId, getCurrentAuthenticatedAppUser().getUsername());
+        AppUser currentUser = getCurrentAuthenticatedAppUser();
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new CustomerNotFoundException("Customer not found with ID: " + customerId));
+        checkCustomerOwnership(customer, currentUser); // Ensure the current user owns the customer
+
+        Page<BankAccount> bankAccounts = bankAccountRepository.findByCustomerIdAndCustomerAppUser(customerId, currentUser, pageable);
+        return bankAccounts.map(bankAccount -> {
+            if (bankAccount instanceof SavingAccount sa) {
+                return dtoMapper.fromSavingAccount(sa);
+            } else if (bankAccount instanceof CurrentAccount ca) {
+                return dtoMapper.fromCurrentAccount(ca);
+            }
+            // Should not happen if data is consistent
+            log.warn("Unknown bank account type found for customer {} account id {}", customerId, bankAccount.getId());
+            return null; // Or throw an exception, or a generic DTO
+        });
+    }
+
+    @Override
     public void debit(DebitDTO debitDTO) {
         log.info("Processing debit operation: {}", debitDTO);
         AppUser currentUser = getCurrentAuthenticatedAppUser();

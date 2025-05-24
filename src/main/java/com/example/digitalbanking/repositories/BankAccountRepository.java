@@ -9,4 +9,7 @@ public interface BankAccountRepository extends JpaRepository<BankAccount, String
 
     // Method to find bank accounts by Customer's AppUser
     org.springframework.data.domain.Page<BankAccount> findByCustomerAppUser(com.example.digitalbanking.entities.AppUser appUser, org.springframework.data.domain.Pageable pageable);
+
+    // Method to find bank accounts by Customer ID and Customer's AppUser
+    org.springframework.data.domain.Page<BankAccount> findByCustomerIdAndCustomerAppUser(Long customerId, com.example.digitalbanking.entities.AppUser appUser, org.springframework.data.domain.Pageable pageable);
 }

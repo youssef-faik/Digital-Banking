@@ -21,6 +21,8 @@ public interface BankAccountService {
     SavingAccountDTO saveSavingBankAccount(double initialBalance, double interestRate, Long customerId);
     Page<BankAccountDTO> bankAccountList(Pageable pageable);
 
+    Page<BankAccountDTO> listAccountsByCustomer(Long customerId, Pageable pageable);
+
     void debit(DebitDTO debitDTO);
     void credit(CreditDTO creditDTO);
     void transfer(TransferRequestDTO transferRequestDTO);
