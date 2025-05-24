@@ -24,4 +24,5 @@ public interface BankAccountService {
     void transfer(TransferRequestDTO transferRequestDTO);
 
     Page<AccountOperationDTO> getAccountHistory(String accountId, Pageable pageable);
+    DashboardStatsDTO getDashboardStats(); // New method for dashboard statistics
 }

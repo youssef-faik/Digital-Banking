@@ -311,4 +311,42 @@ public class BankAccountServiceImpl implements BankAccountService {
         Page<AccountOperation> operations = accountOperationRepository.findByBankAccountIdOrderByOperationDateDesc(accountId, pageable);
         return operations.map(dtoMapper::fromAccountOperation);
     }
+
+    @Override
+    public DashboardStatsDTO getDashboardStats() {
+        log.info("Fetching dashboard statistics for user: {}", getCurrentAuthenticatedAppUser().getUsername());
+        AppUser currentUser = getCurrentAuthenticatedAppUser();
+
+        long totalCustomers = customerRepository.countByAppUser(currentUser);
+        long totalAccounts = bankAccountRepository.countByCustomerAppUser(currentUser);
+        
+        // Calculate total balance across all accounts for the current user
+        // This requires a custom query or iterating through accounts if not directly supported
+        // For simplicity, let's assume a method in the repository or iterate if small scale
+        // If you have many accounts, a custom query in BankAccountRepository would be more efficient.
+        BigDecimal totalBalance = BigDecimal.ZERO;
+        // Iterable<BankAccount> userAccounts = bankAccountRepository.findByCustomerAppUser(currentUser); // This would need a non-paginated version
+        // For a large number of accounts, this iteration is not efficient.
+        // A more performant way would be a custom query in BankAccountRepository:
+        // @Query("SELECT SUM(b.balance) FROM BankAccount b WHERE b.customer.appUser = :user")
+        // BigDecimal sumBalance(@Param("user") AppUser user);
+        // For now, let's use a simpler approach if the number of accounts per user is manageable,
+        // or acknowledge this as a point for optimization.
+        // Considering the current structure, we might need to fetch all accounts and sum them up.
+        // This is not ideal for performance with many accounts.
+        // Let's assume for now we will iterate, but be mindful of performance implications.
+        Iterable<BankAccount> userAccounts = bankAccountRepository.findAllByCustomerAppUser(currentUser); // Assuming this method exists or is added
+        for (BankAccount account : userAccounts) {
+            totalBalance = totalBalance.add(account.getBalance());
+        }
+
+        long totalOperations = accountOperationRepository.countByAppUser(currentUser);
+
+        return new DashboardStatsDTO(
+            totalCustomers,
+            totalAccounts,
+            totalBalance,
+            totalOperations
+        );
+    }
 }

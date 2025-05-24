@@ -21,6 +21,9 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
     // Method to find customers by AppUser and email containing keyword (case-insensitive)
     Page<Customer> findByAppUserAndEmailContainingIgnoreCase(com.example.digitalbanking.entities.AppUser appUser, String emailKeyword, Pageable pageable);
 
+    // Method to count customers by AppUser (for dashboard statistics)
+    long countByAppUser(com.example.digitalbanking.entities.AppUser appUser);
+
     // Optional: If you need a simple list search without pagination
     // List<Customer> findByNameContainingIgnoreCase(String keyword);
 }
