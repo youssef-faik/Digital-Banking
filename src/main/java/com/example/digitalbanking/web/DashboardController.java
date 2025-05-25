@@ -1,7 +1,9 @@
 package com.example.digitalbanking.web;
 
 import com.example.digitalbanking.dtos.DashboardStatsDTO;
-import com.example.digitalbanking.dtos.DashboardChartDataDTO; // Added import
+import com.example.digitalbanking.dtos.DashboardChartDataDTO;
+import com.example.digitalbanking.dtos.RecentTransactionDTO;
+import com.example.digitalbanking.dtos.FinancialMetricsDTO;
 import com.example.digitalbanking.services.BankAccountService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -14,7 +16,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/dashboard")
@@ -57,5 +64,32 @@ public class DashboardController {
         log.info("REST request to get dashboard chart data");
         DashboardChartDataDTO chartData = bankAccountService.getDashboardChartData();
         return ResponseEntity.ok(chartData);
+    }
+
+    @Operation(summary = "Get Recent Transactions", description = "Retrieves the most recent transactions for the authenticated user's dashboard")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved recent transactions"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated"),
+            @ApiResponse(responseCode = "500", description = "Internal server error while fetching transactions")
+    })
+    @GetMapping("/recent-transactions")
+    public ResponseEntity<List<RecentTransactionDTO>> getRecentTransactions(
+            @RequestParam(defaultValue = "10") int limit) {
+        log.info("REST request to get recent transactions with limit: {}", limit);
+        List<RecentTransactionDTO> transactions = bankAccountService.getRecentTransactions(limit);
+        return ResponseEntity.ok(transactions);
+    }
+
+    @Operation(summary = "Get Financial Metrics", description = "Retrieves financial performance metrics for the authenticated user's dashboard")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved financial metrics"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated"),
+            @ApiResponse(responseCode = "500", description = "Internal server error while calculating metrics")
+    })
+    @GetMapping("/financial-metrics")
+    public ResponseEntity<FinancialMetricsDTO> getFinancialMetrics() {
+        log.info("REST request to get financial metrics");
+        FinancialMetricsDTO metrics = bankAccountService.getFinancialMetrics();
+        return ResponseEntity.ok(metrics);
     }
 }

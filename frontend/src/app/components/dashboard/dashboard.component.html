@@ -16,10 +16,9 @@
     <mat-spinner></mat-spinner>
     <p>Loading dashboard data...</p>
   </div>
-
   <div *ngIf="!isLoading && stats" class="dashboard-content">
-    <!-- Statistics Cards -->
-    <div class="stats-grid">
+    <!-- Primary Statistics Cards -->
+    <div class="stats-grid primary-stats">
       <mat-card class="stat-card customers">
         <mat-card-header>
           <mat-icon mat-card-avatar>people</mat-icon>
@@ -38,8 +37,8 @@
         <mat-card-content>
           <div class="stat-value">{{ formatNumber(stats.totalAccounts) }}</div>
           <div class="stat-details">
-            <span class="active">Active: {{ formatNumber(stats.activeAccountsCount) }}</span>
-            <span class="suspended">Suspended: {{ formatNumber(stats.suspendedAccountsCount) }}</span>
+            <span class="current">Current: {{ formatNumber(stats.currentAccountsCount) }}</span>
+            <span class="saving">Saving: {{ formatNumber(stats.savingAccountsCount) }}</span>
           </div>
         </mat-card-content>
       </mat-card>
@@ -65,29 +64,89 @@
         <mat-card-content>
           <div class="stat-value">{{ formatNumber(stats.totalOperationsToday) }}</div>
           <div class="stat-subtitle">
-            Recent: {{ formatNumber(stats.recentOperationsCount) }}
+            Last 24h: {{ formatNumber(stats.operationsLast24Hours) }}
           </div>
         </mat-card-content>
       </mat-card>
     </div>
 
-    <!-- Charts Section -->
-    <div class="charts-section" *ngIf="chartData">      <div class="charts-grid">
-        <!-- Charts temporarily disabled -->
-        <mat-card class="chart-card">
-          <mat-card-header>
-            <mat-card-title>Charts Coming Soon</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <div class="chart-placeholder">
-              <mat-icon style="font-size: 48px; color: #ccc;">insert_chart</mat-icon>
-              <p>Charts will be available once ng2-charts is properly configured</p>
-            </div>
-          </mat-card-content>
-        </mat-card>
+    <!-- Secondary Statistics Cards -->
+    <div class="stats-grid secondary-stats">
+      <mat-card class="stat-card transactions">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>trending_up</mat-icon>
+          <mat-card-title>Transaction Volume</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="stat-value small">{{ formatCurrency(stats.averageDailyTransactionVolume) }}</div>
+          <div class="stat-subtitle">Daily Average</div>
+          <div class="stat-details">
+            <span class="credit">Credit: {{ formatCurrency(stats.totalCreditAmount) }}</span>
+            <span class="debit">Debit: {{ formatCurrency(stats.totalDebitAmount) }}</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
 
-        <!-- 
-        Operations Trend Chart - temporarily commented out
+      <mat-card class="stat-card activity">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>history</mat-icon>
+          <mat-card-title>Activity Summary</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="activity-stats">
+            <div class="activity-item">
+              <span class="period">This Week:</span>
+              <span class="value">{{ formatNumber(stats.totalOperationsThisWeek) }}</span>
+            </div>
+            <div class="activity-item">
+              <span class="period">This Month:</span>
+              <span class="value">{{ formatNumber(stats.totalOperationsThisMonth) }}</span>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card balance-range">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>analytics</mat-icon>
+          <mat-card-title>Balance Range</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="balance-stats">
+            <div class="balance-item">
+              <span class="label">Highest:</span>
+              <span class="value high">{{ formatCurrency(stats.highestAccountBalance) }}</span>
+            </div>
+            <div class="balance-item">
+              <span class="label">Lowest:</span>
+              <span class="value low">{{ formatCurrency(stats.lowestAccountBalance) }}</span>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card account-status">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>verified</mat-icon>
+          <mat-card-title>Account Status</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="status-stats">
+            <div class="status-item active">
+              <mat-icon>check_circle</mat-icon>
+              <span>Active: {{ formatNumber(stats.activeAccountsCount) }}</span>
+            </div>
+            <div class="status-item suspended">
+              <mat-icon>pause_circle</mat-icon>
+              <span>Suspended: {{ formatNumber(stats.suspendedAccountsCount) }}</span>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div><!-- Charts Section -->
+    <div class="charts-section" *ngIf="chartData">
+      <div class="charts-grid">
+        <!-- Operations Trend Chart -->
         <mat-card class="chart-card">
           <mat-card-header>
             <mat-card-title>Operations Trend (Last 7 Days)</mat-card-title>
@@ -103,7 +162,7 @@
           </mat-card-content>
         </mat-card>
 
-        Account Type Distribution Chart - temporarily commented out
+        <!-- Account Type Distribution Chart -->
         <mat-card class="chart-card">
           <mat-card-header>
             <mat-card-title>Account Type Distribution</mat-card-title>
@@ -118,7 +177,6 @@
             </div>
           </mat-card-content>
         </mat-card>
-        -->
       </div>
     </div>
 

@@ -10,12 +10,18 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   // Get the auth token from the service
   const authToken = authService.getToken();
+  console.log('🔑 Auth Interceptor - Token:', authToken ? 'Present' : 'Missing');
+  console.log('🌐 Request URL:', req.url);
+  
   // Clone the request and add the authorization header if token exists
   let authReq = req;
   if (authToken && !req.url.includes('/auth/login') && !req.url.includes('/auth/register')) {
     authReq = req.clone({
       headers: req.headers.set('Authorization', `Bearer ${authToken}`)
     });
+    console.log('✅ Authorization header added to request');
+  } else {
+    console.log('❌ No authorization header added');
   }
 
   // Handle the request and catch errors

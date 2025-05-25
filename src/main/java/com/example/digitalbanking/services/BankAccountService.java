@@ -4,6 +4,8 @@ import com.example.digitalbanking.dtos.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 
 public interface BankAccountService {
     CustomerDTO saveCustomer(CustomerDTO customerDTO);
@@ -20,11 +22,14 @@ public interface BankAccountService {
     Page<BankAccountDTO> listAccountsByCustomer(Long customerId, Pageable pageable);
 
     void debit(DebitDTO debitDTO);
-    void credit(CreditDTO creditDTO);
-    void transfer(TransferRequestDTO transferRequestDTO);
+    void credit(CreditDTO creditDTO);    void transfer(TransferRequestDTO transferRequestDTO);
 
     // Corrected signature to match implementation
     AccountHistoryDTO getAccountHistory(String accountId, int page, int size);
     DashboardStatsDTO getDashboardStats(); // New method for dashboard statistics
     DashboardChartDataDTO getDashboardChartData(); // New method for dashboard chart data
+    
+    // Enhanced dashboard methods
+    List<RecentTransactionDTO> getRecentTransactions(int limit);
+    FinancialMetricsDTO getFinancialMetrics();
 }

@@ -12,6 +12,22 @@ import java.math.BigDecimal;
 public class DashboardStatsDTO {
     private long totalCustomers;
     private long totalAccounts;
-    private long totalOperations;
-    private BigDecimal totalBalance; // Corrected field name to match constructor usage
+    private BigDecimal totalBalance;
+    private long totalOperationsToday;
+    private BigDecimal averageAccountBalance;
+    private long activeAccountsCount;
+    private long suspendedAccountsCount;
+    private long recentOperationsCount;
+    
+    // Additional comprehensive statistics
+    private long totalOperationsThisWeek;
+    private long totalOperationsThisMonth;
+    private BigDecimal totalCreditAmount;
+    private BigDecimal totalDebitAmount;
+    private long currentAccountsCount;
+    private long savingAccountsCount;
+    private BigDecimal highestAccountBalance;
+    private BigDecimal lowestAccountBalance;
+    private long operationsLast24Hours;
+    private BigDecimal averageDailyTransactionVolume;
 }

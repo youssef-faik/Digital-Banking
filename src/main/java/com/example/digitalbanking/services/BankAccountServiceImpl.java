@@ -19,8 +19,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDate; // Added for LocalDate
+import java.time.LocalDateTime; // Added for LocalDateTime
 import java.time.ZoneId; // Added for ZoneId
 import java.time.temporal.ChronoUnit; // Added for ChronoUnit
 import java.util.ArrayList; // Added for ArrayList
@@ -330,29 +332,110 @@ public class BankAccountServiceImpl implements BankAccountService {
         accountHistoryDTO.setTotalPages(accountOperations.getTotalPages());
         accountHistoryDTO.setAccountOperationDTOS(accountOperationDTOS);
         return accountHistoryDTO;
-    }
-
-    @Override
+    }    @Override
     public DashboardStatsDTO getDashboardStats() {
         AppUser currentUser = getCurrentAuthenticatedAppUser();
         log.info("Fetching dashboard stats for user: {}", currentUser.getUsername());
 
         long totalCustomers = customerRepository.countByAppUser(currentUser);
         long totalAccounts = bankAccountRepository.countByCustomerAppUser(currentUser);
-        long totalOperations = accountOperationRepository.countByAppUser(currentUser);
-
+        
         // Calculate total balance for the user
-        // This could be optimized with a custom query in BankAccountRepository if performance becomes an issue
         List<BankAccount> userAccounts = bankAccountRepository.findAllByCustomerAppUser(currentUser);
         BigDecimal totalBalance = userAccounts.stream()
                 .map(BankAccount::getBalance)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        // Calculate average balance
+        BigDecimal averageAccountBalance = totalAccounts > 0 ? 
+            totalBalance.divide(BigDecimal.valueOf(totalAccounts), 2, RoundingMode.HALF_UP) : 
+            BigDecimal.ZERO;
+        
+        // Operations today
+        Instant todayStart = Instant.now().truncatedTo(ChronoUnit.DAYS);
+        long totalOperationsToday = accountOperationRepository
+            .countByAppUserAndOperationDateAfter(currentUser, todayStart);
+        
+        // Operations this week
+        Instant weekStart = Instant.now().minus(7, ChronoUnit.DAYS);
+        long totalOperationsThisWeek = accountOperationRepository
+            .countByAppUserAndOperationDateAfter(currentUser, weekStart);
+            
+        // Operations this month
+        Instant monthStart = Instant.now().minus(30, ChronoUnit.DAYS);
+        long totalOperationsThisMonth = accountOperationRepository
+            .countByAppUserAndOperationDateAfter(currentUser, monthStart);
+        
+        // All accounts are active for now (no suspended status implemented)
+        long activeAccountsCount = totalAccounts;
+        long suspendedAccountsCount = 0;
+        
+        // Recent operations (last 24 hours)
+        Instant yesterday = Instant.now().minus(1, ChronoUnit.DAYS);
+        long recentOperationsCount = accountOperationRepository
+            .countByAppUserAndOperationDateAfter(currentUser, yesterday);
+            
+        // Calculate credit and debit totals
+        List<AccountOperation> allOperations = accountOperationRepository
+            .findByAppUserAndOperationDateAfterOrderByOperationDateAsc(currentUser, monthStart);
+            
+        BigDecimal totalCreditAmount = allOperations.stream()
+            .filter(op -> op.getType() == OperationType.CREDIT)
+            .map(AccountOperation::getAmount)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+            
+        BigDecimal totalDebitAmount = allOperations.stream()
+            .filter(op -> op.getType() == OperationType.DEBIT)
+            .map(AccountOperation::getAmount)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        // Count account types
+        long currentAccountsCount = userAccounts.stream()
+            .filter(account -> account instanceof CurrentAccount)
+            .count();
+            
+        long savingAccountsCount = userAccounts.stream()
+            .filter(account -> account instanceof SavingAccount)
+            .count();
+        
+        // Find highest and lowest balances
+        BigDecimal highestAccountBalance = userAccounts.stream()
+            .map(BankAccount::getBalance)
+            .max(BigDecimal::compareTo)
+            .orElse(BigDecimal.ZERO);
+            
+        BigDecimal lowestAccountBalance = userAccounts.stream()
+            .map(BankAccount::getBalance)
+            .min(BigDecimal::compareTo)
+            .orElse(BigDecimal.ZERO);
+            
+        // Operations in last 24 hours
+        long operationsLast24Hours = recentOperationsCount;
+        
+        // Average daily transaction volume (last 30 days)
+        BigDecimal averageDailyTransactionVolume = totalOperationsThisMonth > 0 ?
+            totalCreditAmount.add(totalDebitAmount).divide(BigDecimal.valueOf(30), 2, RoundingMode.HALF_UP) :
+            BigDecimal.ZERO;
 
         return new DashboardStatsDTO(
                 totalCustomers,
                 totalAccounts,
-                totalOperations,
-                totalBalance
+                totalBalance,
+                totalOperationsToday,
+                averageAccountBalance,
+                activeAccountsCount,
+                suspendedAccountsCount,
+                recentOperationsCount,
+                totalOperationsThisWeek,
+                totalOperationsThisMonth,
+                totalCreditAmount,
+                totalDebitAmount,
+                currentAccountsCount,
+                savingAccountsCount,
+                highestAccountBalance,
+                lowestAccountBalance,
+                operationsLast24Hours,
+                averageDailyTransactionVolume
         );
     }
 
@@ -384,8 +467,115 @@ public class BankAccountServiceImpl implements BankAccountService {
 
         List<DataPointDTO> accountTypeDistribution = new ArrayList<>();
         accountTypeDistribution.add(new DataPointDTO("Current Accounts", (double) currentAccountsCount));
-        accountTypeDistribution.add(new DataPointDTO("Saving Accounts", (double) savingAccountsCount));
+        accountTypeDistribution.add(new DataPointDTO("Saving Accounts", (double) savingAccountsCount));        return new DashboardChartDataDTO(operationsTrend, accountTypeDistribution);
+    }
 
-        return new DashboardChartDataDTO(operationsTrend, accountTypeDistribution);
+    private AppUser getCurrentUser() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return appUserRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+    }
+
+    @Override
+    public List<RecentTransactionDTO> getRecentTransactions(int limit) {
+        log.info("Getting recent transactions with limit: {}", limit);
+        
+        AppUser currentUser = getCurrentUser();
+        List<BankAccount> userAccounts = bankAccountRepository.findAllByCustomerAppUser(currentUser);
+        List<String> accountIds = userAccounts.stream().map(BankAccount::getId).collect(Collectors.toList());
+        
+        if (accountIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+          Pageable pageable = PageRequest.of(0, limit);
+        Page<AccountOperation> operations = accountOperationRepository.findByBankAccountIdInOrderByOperationDateDesc(accountIds, pageable);        return operations.getContent().stream().map(operation -> {
+            BankAccount account = operation.getBankAccount();
+            String customerName = account != null ? account.getCustomer().getName() : "Unknown";
+            
+            return new RecentTransactionDTO(
+                    operation.getId(),
+                    operation.getType().toString(),
+                    operation.getAmount(),
+                    operation.getDescription(),
+                    LocalDateTime.ofInstant(operation.getOperationDate(), ZoneId.systemDefault()),
+                    account != null ? account.getId() : "Unknown",
+                    customerName
+            );
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    public FinancialMetricsDTO getFinancialMetrics() {
+        log.info("Calculating financial metrics for current user");
+        
+        AppUser currentUser = getCurrentUser();
+        List<BankAccount> userAccounts = bankAccountRepository.findAllByCustomerAppUser(currentUser);
+        List<String> accountIds = userAccounts.stream().map(BankAccount::getId).collect(Collectors.toList());
+        
+        if (accountIds.isEmpty()) {
+            return new FinancialMetricsDTO(
+                    BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, 
+                    BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO
+            );
+        }
+        
+        List<AccountOperation> allOperations = accountOperationRepository.findByBankAccountIdIn(accountIds);
+        
+        // Calculate totals
+        BigDecimal totalRevenue = allOperations.stream()
+                .filter(op -> op.getType() == OperationType.CREDIT)
+                .map(AccountOperation::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        BigDecimal totalExpenses = allOperations.stream()
+                .filter(op -> op.getType() == OperationType.DEBIT)
+                .map(AccountOperation::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        BigDecimal netProfit = totalRevenue.subtract(totalExpenses);
+        
+        // Calculate growth rate (simple month-over-month)
+        LocalDate oneMonthAgo = LocalDate.now().minusMonths(1);
+        Instant oneMonthAgoInstant = oneMonthAgo.atStartOfDay(ZoneId.systemDefault()).toInstant();
+        
+        BigDecimal currentMonthRevenue = allOperations.stream()
+                .filter(op -> op.getType() == OperationType.CREDIT)
+                .filter(op -> op.getOperationDate().isAfter(oneMonthAgoInstant))
+                .map(AccountOperation::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        BigDecimal previousMonthRevenue = allOperations.stream()
+                .filter(op -> op.getType() == OperationType.CREDIT)
+                .filter(op -> op.getOperationDate().isBefore(oneMonthAgoInstant))
+                .map(AccountOperation::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        BigDecimal growthRate = BigDecimal.ZERO;
+        if (previousMonthRevenue.compareTo(BigDecimal.ZERO) > 0) {
+            growthRate = currentMonthRevenue.subtract(previousMonthRevenue)
+                    .divide(previousMonthRevenue, 4, RoundingMode.HALF_UP)
+                    .multiply(BigDecimal.valueOf(100));
+        }
+        
+        // Simulate transaction fees (typically a small percentage)
+        BigDecimal transactionFees = totalRevenue.multiply(BigDecimal.valueOf(0.001)); // 0.1% fee
+        
+        // Calculate average transaction size
+        BigDecimal averageTransactionSize = BigDecimal.ZERO;
+        if (!allOperations.isEmpty()) {
+            BigDecimal totalTransactionAmount = allOperations.stream()
+                    .map(AccountOperation::getAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            averageTransactionSize = totalTransactionAmount.divide(BigDecimal.valueOf(allOperations.size()), 2, RoundingMode.HALF_UP);
+        }
+        
+        return new FinancialMetricsDTO(
+                totalRevenue,
+                totalExpenses,
+                netProfit,
+                growthRate,
+                transactionFees,
+                averageTransactionSize
+        );
     }
 }

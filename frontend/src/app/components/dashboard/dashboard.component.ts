@@ -6,20 +6,21 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatGridListModule } from '@angular/material/grid-list';
-// import { NgChartsModule } from 'ng2-charts';
-// import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
-import { DashboardService, DashboardStatsDTO, DashboardChartDataDTO } from '../../services/dashboard.service';
+import { BaseChartDirective } from 'ng2-charts';
+import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
+import { DashboardService, DashboardStatsDTO, DashboardChartDataDTO, RecentTransactionDTO, FinancialMetricsDTO } from '../../services/dashboard.service';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
-  selector: 'app-dashboard',  imports: [
+  selector: 'app-dashboard',
+  imports: [
     CommonModule,
     MatCardModule,
     MatIconModule,
     MatButtonModule,
     MatProgressSpinnerModule,
     MatGridListModule,
-    // NgChartsModule
+    BaseChartDirective
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
@@ -27,9 +28,11 @@ import { AuthService } from '../../services/auth.service';
 export class DashboardComponent implements OnInit, OnDestroy {
   stats: DashboardStatsDTO | null = null;
   chartData: DashboardChartDataDTO | null = null;
+  recentTransactions: RecentTransactionDTO[] = [];
+  financialMetrics: FinancialMetricsDTO | null = null;
   isLoading = true;
-    // Chart configurations (temporarily commented out)
-  /*
+  
+  // Chart configurations
   operationsTrendChartData: ChartData<'line'> = {
     labels: [],
     datasets: []
@@ -64,7 +67,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
     }
   };
-  */
+  
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -79,31 +82,33 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-  }
-
-  loadDashboardData(): void {
+  }  loadDashboardData(): void {
     this.isLoading = true;
+    console.log('📊 Loading dashboard data...');
+    console.log('🔐 User authenticated:', this.authService.isAuthenticated());
+    console.log('👤 Current user:', this.authService.getCurrentUser());
     
+    // For now, use the existing getDashboardOverview method
     this.dashboardService.getDashboardOverview()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (data) => {
+        next: (data: any) => {
+          console.log('✅ Dashboard data loaded successfully:', data);
           this.stats = data.stats;
           this.chartData = data.chartData;
           this.setupCharts();
           this.isLoading = false;
         },
-        error: (error) => {
-          console.error('Error loading dashboard data:', error);
+        error: (error: any) => {
+          console.error('❌ Error loading dashboard data:', error);
+          console.log('📊 Error status:', error.status);
+          console.log('📊 Error message:', error.message);
           this.isLoading = false;
         }
       });
-  }
-  private setupCharts(): void {
+  }  private setupCharts(): void {
     if (!this.chartData) return;
 
-    // Chart setup temporarily commented out
-    /*
     // Operations Trend Chart
     this.operationsTrendChartData = this.dashboardService.formatChartData(
       this.chartData.operationsTrend, 
@@ -115,7 +120,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.chartData.accountTypeDistribution, 
       'doughnut'
     );
-    */
   }
 
   refreshData(): void {

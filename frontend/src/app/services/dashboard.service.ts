@@ -3,17 +3,6 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-export interface DashboardStatsDTO {
-  totalCustomers: number;
-  totalAccounts: number;
-  totalBalance: number;
-  totalOperationsToday: number;
-  averageAccountBalance: number;
-  activeAccountsCount: number;
-  suspendedAccountsCount: number;
-  recentOperationsCount: number;
-}
-
 export interface DataPointDTO {
   label: string;
   value: number;
@@ -29,6 +18,47 @@ export interface DashboardChartDataDTO {
 export interface DashboardOverview {
   stats: DashboardStatsDTO;
   chartData: DashboardChartDataDTO;
+}
+
+export interface RecentTransactionDTO {
+  id: number;
+  type: 'CREDIT' | 'DEBIT' | 'TRANSFER';
+  amount: number;
+  description: string;
+  operationDate: string;
+  accountId: string;
+  customerName: string;
+}
+
+export interface FinancialMetricsDTO {
+  totalRevenue: number;
+  totalExpenses: number;
+  netProfit: number;
+  growthRate: number;
+  transactionFees: number;
+  averageTransactionSize: number;
+}
+
+export interface DashboardStatsDTO {
+  totalCustomers: number;
+  totalAccounts: number;
+  totalBalance: number;
+  totalOperationsToday: number;
+  averageAccountBalance: number;
+  activeAccountsCount: number;
+  suspendedAccountsCount: number;
+  recentOperationsCount: number;
+  // Additional comprehensive statistics
+  totalOperationsThisWeek: number;
+  totalOperationsThisMonth: number;
+  totalCreditAmount: number;
+  totalDebitAmount: number;
+  currentAccountsCount: number;
+  savingAccountsCount: number;
+  highestAccountBalance: number;
+  lowestAccountBalance: number;
+  operationsLast24Hours: number;
+  averageDailyTransactionVolume: number;
 }
 
 @Injectable({
@@ -140,6 +170,21 @@ export class DashboardService {
    */
   getRealTimeMetrics(): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/realtime`);
+  }
+
+  /**
+   * Get recent transactions for dashboard
+   */
+  getRecentTransactions(limit: number = 10): Observable<RecentTransactionDTO[]> {
+    let params = new HttpParams().set('limit', limit.toString());
+    return this.http.get<RecentTransactionDTO[]>(`${this.baseUrl}/recent-transactions`, { params });
+  }
+
+  /**
+   * Get financial metrics for dashboard
+   */
+  getFinancialMetrics(): Observable<FinancialMetricsDTO> {
+    return this.http.get<FinancialMetricsDTO>(`${this.baseUrl}/financial-metrics`);
   }
 
   /**
