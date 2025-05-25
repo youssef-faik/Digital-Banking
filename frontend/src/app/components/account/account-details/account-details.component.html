@@ -1,0 +1,250 @@
+<div class="account-details-container">
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p class="loading-text">Loading account details...</p>
+  </div>
+
+  <!-- Account Details -->
+  <div *ngIf="!loading && account" class="details-content">
+    <!-- Header Section -->
+    <div class="page-header">
+      <div class="header-actions">
+        <button mat-icon-button (click)="goBack()" class="back-btn">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+        <div class="page-title">
+          <h1>Account Details</h1>
+          <span class="account-id">{{ account.id }}</span>
+        </div>
+      </div>
+      <div class="header-buttons">
+        <button mat-stroked-button (click)="refreshData()" class="refresh-btn">
+          <mat-icon>refresh</mat-icon>
+          Refresh
+        </button>
+        <button mat-raised-button color="primary" (click)="editAccount()">
+          <mat-icon>edit</mat-icon>
+          Edit Account
+        </button>
+      </div>
+    </div>
+
+    <!-- Account Information Cards -->
+    <div class="info-grid">
+      <!-- Basic Information Card -->
+      <mat-card class="info-card basic-info">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>account_balance</mat-icon>
+          <mat-card-title>Account Information</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="info-row">
+            <span class="label">Account Type:</span>
+            <mat-chip [color]="isCurrentAccount() ? 'primary' : 'accent'" selected>
+              {{ isCurrentAccount() ? 'Current Account' : 'Saving Account' }}
+            </mat-chip>
+          </div>
+          <div class="info-row">
+            <span class="label">Current Balance:</span>
+            <span class="balance" [class.negative]="account.balance < 0">
+              {{ formatCurrency(account.balance) }}
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="label">Created Date:</span>
+            <span class="value">{{ formatDate(account.createdAt) }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Status:</span>
+            <mat-chip [color]="account.status === 'ACTIVE' ? 'primary' : 'warn'" selected>
+              {{ account.status }}
+            </mat-chip>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Customer Information Card -->
+      <mat-card class="info-card customer-info">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>person</mat-icon>
+          <mat-card-title>Account Holder</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>          <div class="info-row">
+            <span class="label">Name:</span>
+            <span class="value">{{ account.customer.name }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Email:</span>
+            <span class="value">{{ account.customer.email }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Customer ID:</span>
+            <span class="value">{{ account.customer.id }}</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Account Type Specific Information -->
+      <mat-card class="info-card type-specific" *ngIf="isCurrentAccount()">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>credit_card</mat-icon>
+          <mat-card-title>Current Account Details</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="info-row">
+            <span class="label">Overdraft Limit:</span>
+            <span class="value">{{ formatCurrency(getCurrentAccount()?.overDraft || 0) }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Available Credit:</span>
+            <span class="value available-credit">
+              {{ formatCurrency((getCurrentAccount()?.overDraft || 0) + account.balance) }}
+            </span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="info-card type-specific" *ngIf="isSavingAccount()">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>savings</mat-icon>
+          <mat-card-title>Saving Account Details</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="info-row">
+            <span class="label">Interest Rate:</span>
+            <span class="value">{{ getSavingAccount()?.interestRate }}%</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Annual Interest:</span>
+            <span class="value">
+              {{ formatCurrency((account.balance * (getSavingAccount()?.interestRate || 0)) / 100) }}
+            </span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Quick Actions -->
+    <mat-card class="actions-card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>dashboard</mat-icon>
+        <mat-card-title>Quick Actions</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="action-buttons">
+          <button mat-raised-button color="primary" (click)="navigateToOperation('credit')">
+            <mat-icon>add_circle</mat-icon>
+            Credit Account
+          </button>
+          <button mat-raised-button color="warn" (click)="navigateToOperation('debit')">
+            <mat-icon>remove_circle</mat-icon>
+            Debit Account
+          </button>
+          <button mat-raised-button color="accent" (click)="navigateToOperation('transfer')">
+            <mat-icon>swap_horiz</mat-icon>
+            Transfer Money
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Account Operations History -->
+    <mat-card class="operations-card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>history</mat-icon>
+        <mat-card-title>Transaction History</mat-card-title>
+        <div class="spacer"></div>
+        <button mat-icon-button (click)="loadOperations(0, pageSize)" [disabled]="operationsLoading">
+          <mat-icon>refresh</mat-icon>
+        </button>
+      </mat-card-header>
+      <mat-card-content>
+        <div *ngIf="operationsLoading" class="operations-loading">
+          <mat-spinner diameter="30"></mat-spinner>
+          <span>Loading transactions...</span>
+        </div>
+
+        <div *ngIf="!operationsLoading && operations.length === 0" class="no-operations">
+          <mat-icon>receipt_long</mat-icon>
+          <h3>No Transactions</h3>
+          <p>This account has no transaction history yet.</p>
+        </div>
+
+        <div *ngIf="!operationsLoading && operations.length > 0" class="operations-table">
+          <table mat-table [dataSource]="operations" class="transaction-table">
+            <!-- Date Column -->
+            <ng-container matColumnDef="date">
+              <th mat-header-cell *matHeaderCellDef>Date</th>
+              <td mat-cell *matCellDef="let operation">
+                {{ formatDate(operation.operationDate) }}
+              </td>
+            </ng-container>
+
+            <!-- Type Column -->
+            <ng-container matColumnDef="type">
+              <th mat-header-cell *matHeaderCellDef>Type</th>
+              <td mat-cell *matCellDef="let operation">
+                <mat-chip [color]="getOperationTypeColor(operation.type)" selected>
+                  <mat-icon>{{ getOperationIcon(operation.type) }}</mat-icon>
+                  {{ operation.type }}
+                </mat-chip>
+              </td>
+            </ng-container>
+
+            <!-- Amount Column -->
+            <ng-container matColumnDef="amount">
+              <th mat-header-cell *matHeaderCellDef>Amount</th>
+              <td mat-cell *matCellDef="let operation">
+                <span class="amount" [class]="operation.type.toLowerCase()">
+                  {{ formatCurrency(operation.amount) }}
+                </span>
+              </td>
+            </ng-container>
+
+            <!-- Description Column -->
+            <ng-container matColumnDef="description">
+              <th mat-header-cell *matHeaderCellDef>Description</th>
+              <td mat-cell *matCellDef="let operation">
+                {{ operation.description || 'No description' }}
+              </td>
+            </ng-container>
+
+            <!-- Balance Column -->
+            <ng-container matColumnDef="balance">
+              <th mat-header-cell *matHeaderCellDef>Balance After</th>
+              <td mat-cell *matCellDef="let operation">
+                <span class="balance" [class.negative]="operation.balanceAfter < 0">
+                  {{ formatCurrency(operation.balanceAfter) }}
+                </span>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          </table>
+
+          <!-- Pagination -->
+          <mat-paginator 
+            [length]="1000" 
+            [pageSize]="pageSize" 
+            [pageSizeOptions]="[5, 10, 20, 50]"
+            (page)="loadOperations($event.pageIndex, $event.pageSize)"
+            showFirstLastButtons>
+          </mat-paginator>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="!loading && !account" class="error-state">
+    <mat-icon>error_outline</mat-icon>
+    <h2>Account Not Found</h2>
+    <p>The requested account could not be found or you don't have permission to view it.</p>
+    <button mat-raised-button color="primary" (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+      Back to Accounts
+    </button>
+  </div>
+</div>

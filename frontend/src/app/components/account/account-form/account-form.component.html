@@ -1,0 +1,135 @@
+<div class="account-form-container">
+  <mat-card class="account-form-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>account_balance</mat-icon>
+        {{ isEdit ? 'Edit Account' : 'Create New Account' }}
+      </mat-card-title>
+      <mat-card-subtitle>
+        {{ isEdit ? 'Update account information' : 'Fill in the details to create a new bank account' }}
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="accountForm" (ngSubmit)="onSubmit()" class="account-form">
+        
+        <!-- Customer Selection -->
+        <mat-form-field class="full-width">
+          <mat-label>Customer</mat-label>
+          <mat-select formControlName="customerId" [disabled]="isEdit">
+            <mat-option value="">Select a customer</mat-option>
+            <mat-option *ngFor="let customer of customers" [value]="customer.id">
+              {{ customer.name }} ({{ customer.email }})
+            </mat-option>
+          </mat-select>
+          <mat-icon matSuffix>person</mat-icon>
+          <mat-error *ngIf="accountForm.get('customerId')?.hasError('required') && accountForm.get('customerId')?.touched">
+            Customer is required
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Account Type Selection -->
+        <mat-form-field class="full-width">
+          <mat-label>Account Type</mat-label>
+          <mat-select formControlName="accountType" [disabled]="isEdit">
+            <mat-option value="">Select account type</mat-option>
+            <mat-option *ngFor="let type of accountTypes" [value]="type.value">
+              {{ type.label }}
+            </mat-option>
+          </mat-select>
+          <mat-icon matSuffix>account_balance_wallet</mat-icon>
+          <mat-error *ngIf="accountForm.get('accountType')?.hasError('required') && accountForm.get('accountType')?.touched">
+            Account type is required
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Initial Balance -->
+        <mat-form-field class="full-width">
+          <mat-label>{{ isEdit ? 'Current Balance' : 'Initial Balance' }}</mat-label>
+          <input matInput
+                 type="number"
+                 step="0.01"
+                 min="0"
+                 formControlName="initialBalance"
+                 [readonly]="isEdit"
+                 placeholder="Enter amount">
+          <span matTextPrefix>$&nbsp;</span>
+          <mat-icon matSuffix>attach_money</mat-icon>
+          <mat-error *ngIf="accountForm.get('initialBalance')?.hasError('required') && accountForm.get('initialBalance')?.touched">
+            {{ isEdit ? 'Balance' : 'Initial balance' }} is required
+          </mat-error>
+          <mat-error *ngIf="accountForm.get('initialBalance')?.hasError('min') && accountForm.get('initialBalance')?.touched">
+            Amount must be greater than or equal to 0
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Overdraft (Current Account only) -->
+        <mat-form-field 
+          class="full-width" 
+          *ngIf="accountForm.get('accountType')?.value === 'CURRENT'">
+          <mat-label>Overdraft Limit</mat-label>
+          <input matInput
+                 type="number"
+                 step="0.01"
+                 min="0"
+                 formControlName="overdraft"
+                 placeholder="Enter overdraft limit">
+          <span matTextPrefix>$&nbsp;</span>
+          <mat-icon matSuffix>credit_card</mat-icon>
+          <mat-error *ngIf="accountForm.get('overdraft')?.hasError('required') && accountForm.get('overdraft')?.touched">
+            Overdraft limit is required for current accounts
+          </mat-error>
+          <mat-error *ngIf="accountForm.get('overdraft')?.hasError('min') && accountForm.get('overdraft')?.touched">
+            Overdraft limit must be greater than or equal to 0
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Interest Rate (Saving Account only) -->
+        <mat-form-field 
+          class="full-width" 
+          *ngIf="accountForm.get('accountType')?.value === 'SAVING'">
+          <mat-label>Interest Rate</mat-label>
+          <input matInput
+                 type="number"
+                 step="0.01"
+                 min="0"
+                 max="100"
+                 formControlName="interestRate"
+                 placeholder="Enter interest rate">
+          <span matTextSuffix>%</span>
+          <mat-icon matSuffix>trending_up</mat-icon>
+          <mat-error *ngIf="accountForm.get('interestRate')?.hasError('required') && accountForm.get('interestRate')?.touched">
+            Interest rate is required for savings accounts
+          </mat-error>
+          <mat-error *ngIf="accountForm.get('interestRate')?.hasError('min') && accountForm.get('interestRate')?.touched">
+            Interest rate must be greater than or equal to 0
+          </mat-error>
+          <mat-error *ngIf="accountForm.get('interestRate')?.hasError('max') && accountForm.get('interestRate')?.touched">
+            Interest rate must be less than or equal to 100
+          </mat-error>
+        </mat-form-field>
+
+      </form>
+    </mat-card-content>
+
+    <mat-card-actions class="card-actions">
+      <button mat-button 
+              type="button" 
+              (click)="onCancel()"
+              [disabled]="loading">
+        <mat-icon>cancel</mat-icon>
+        Cancel
+      </button>
+      
+      <button mat-raised-button 
+              color="primary" 
+              type="submit"
+              (click)="onSubmit()"
+              [disabled]="!accountForm.valid || loading">
+        <mat-icon *ngIf="!loading">{{ isEdit ? 'save' : 'account_balance' }}</mat-icon>
+        <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
+        {{ loading ? 'Processing...' : (isEdit ? 'Update Account' : 'Create Account') }}
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>

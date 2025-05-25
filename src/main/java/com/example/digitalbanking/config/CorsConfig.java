@@ -10,13 +10,14 @@ public class CorsConfig {
 
     @Bean
     public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
+        return new WebMvcConfigurer() {            @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**") // Allow CORS for all endpoints
-                        .allowedOrigins("*") // Allow requests from any origin
+                        .allowedOriginPatterns("*") // Use allowedOriginPatterns instead of allowedOrigins with credentials
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Allowed HTTP methods
-                        .allowedHeaders("*"); // Allow all headers
+                        .allowedHeaders("*") // Allow all headers
+                        .allowCredentials(true) // Allow credentials (important for JWT in headers)
+                        .maxAge(3600); // Cache preflight response for 1 hour
             }
         };
     }

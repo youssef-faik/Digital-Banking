@@ -1,0 +1,72 @@
+<div class="customer-form-container">
+  <mat-card class="customer-form-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>{{isEditMode ? 'edit' : 'person_add'}}</mat-icon>
+        {{getFormTitle()}}
+      </mat-card-title>
+      <mat-card-subtitle>
+        {{isEditMode ? 'Update customer information' : 'Enter customer details to create a new account'}}
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="customerForm" (ngSubmit)="onSubmit()" class="customer-form">
+        
+        <!-- Name Field -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Full Name</mat-label>
+          <input 
+            matInput 
+            formControlName="name"
+            placeholder="Enter customer's full name"
+            [disabled]="isLoading">
+          <mat-icon matSuffix>person</mat-icon>
+          <mat-error *ngIf="customerForm.get('name')?.hasError('required')">
+            Name is required
+          </mat-error>
+          <mat-error *ngIf="customerForm.get('name')?.hasError('minlength')">
+            Name must be at least 2 characters
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Email Field -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Email Address</mat-label>
+          <input 
+            matInput 
+            type="email"
+            formControlName="email"
+            placeholder="Enter customer's email address"
+            [disabled]="isLoading">
+          <mat-icon matSuffix>email</mat-icon>
+          <mat-error *ngIf="customerForm.get('email')?.hasError('required')">
+            Email is required
+          </mat-error>
+          <mat-error *ngIf="customerForm.get('email')?.hasError('email')">
+            Please enter a valid email address
+          </mat-error>
+        </mat-form-field>
+
+      </form>
+    </mat-card-content>
+
+    <mat-card-actions align="end" class="card-actions">
+      <button mat-button type="button" (click)="cancel()" [disabled]="isLoading">
+        <mat-icon>cancel</mat-icon>
+        Cancel
+      </button>
+      <button 
+        mat-raised-button 
+        color="primary" 
+        type="submit"
+        (click)="onSubmit()"
+        [disabled]="!customerForm.valid || isLoading">
+        <mat-icon *ngIf="isLoading">refresh</mat-icon>
+        <mat-icon *ngIf="!isLoading">{{isEditMode ? 'save' : 'add'}}</mat-icon>
+        {{getSubmitButtonText()}}
+      </button>
+    </mat-card-actions>
+
+  </mat-card>
+</div>

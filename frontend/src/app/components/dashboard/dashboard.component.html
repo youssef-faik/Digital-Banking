@@ -1,0 +1,158 @@
+<div class="dashboard-container">  <div class="dashboard-header">
+    <h1>Dashboard</h1>
+    <div class="dashboard-actions">
+      <button mat-raised-button color="primary" (click)="refreshData()" [disabled]="isLoading">
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
+      <button mat-raised-button color="warn" (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        Logout
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Loading dashboard data...</p>
+  </div>
+
+  <div *ngIf="!isLoading && stats" class="dashboard-content">
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+      <mat-card class="stat-card customers">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>people</mat-icon>
+          <mat-card-title>Total Customers</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="stat-value">{{ formatNumber(stats.totalCustomers) }}</div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card accounts">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>account_balance_wallet</mat-icon>
+          <mat-card-title>Total Accounts</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="stat-value">{{ formatNumber(stats.totalAccounts) }}</div>
+          <div class="stat-details">
+            <span class="active">Active: {{ formatNumber(stats.activeAccountsCount) }}</span>
+            <span class="suspended">Suspended: {{ formatNumber(stats.suspendedAccountsCount) }}</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card balance">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>account_balance</mat-icon>
+          <mat-card-title>Total Balance</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="stat-value">{{ formatCurrency(stats.totalBalance) }}</div>
+          <div class="stat-subtitle">
+            Avg: {{ formatCurrency(stats.averageAccountBalance) }}
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card operations">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>swap_horiz</mat-icon>
+          <mat-card-title>Operations Today</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="stat-value">{{ formatNumber(stats.totalOperationsToday) }}</div>
+          <div class="stat-subtitle">
+            Recent: {{ formatNumber(stats.recentOperationsCount) }}
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="charts-section" *ngIf="chartData">      <div class="charts-grid">
+        <!-- Charts temporarily disabled -->
+        <mat-card class="chart-card">
+          <mat-card-header>
+            <mat-card-title>Charts Coming Soon</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="chart-placeholder">
+              <mat-icon style="font-size: 48px; color: #ccc;">insert_chart</mat-icon>
+              <p>Charts will be available once ng2-charts is properly configured</p>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- 
+        Operations Trend Chart - temporarily commented out
+        <mat-card class="chart-card">
+          <mat-card-header>
+            <mat-card-title>Operations Trend (Last 7 Days)</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="chart-container">
+              <canvas baseChart
+                      [data]="operationsTrendChartData"
+                      [options]="lineChartOptions"
+                      type="line">
+              </canvas>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        Account Type Distribution Chart - temporarily commented out
+        <mat-card class="chart-card">
+          <mat-card-header>
+            <mat-card-title>Account Type Distribution</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="chart-container">
+              <canvas baseChart
+                      [data]="accountTypeChartData"
+                      [options]="doughnutChartOptions"
+                      type="doughnut">
+              </canvas>
+            </div>
+          </mat-card-content>
+        </mat-card>
+        -->
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions-section">
+      <mat-card class="quick-actions-card">
+        <mat-card-header>
+          <mat-card-title>Quick Actions</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="action-buttons">
+            <button mat-raised-button color="primary" routerLink="/customers/new">
+              <mat-icon>person_add</mat-icon>
+              Add Customer
+            </button>
+            <button mat-raised-button color="accent" routerLink="/accounts/new">
+              <mat-icon>add_circle</mat-icon>
+              Create Account
+            </button>
+            <button mat-raised-button routerLink="/operations/transfer">
+              <mat-icon>swap_horiz</mat-icon>
+              Transfer Money
+            </button>
+            <button mat-stroked-button routerLink="/operations/debit">
+              <mat-icon>remove_circle</mat-icon>
+              Debit
+            </button>
+            <button mat-stroked-button routerLink="/operations/credit">
+              <mat-icon>add_circle_outline</mat-icon>
+              Credit
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>

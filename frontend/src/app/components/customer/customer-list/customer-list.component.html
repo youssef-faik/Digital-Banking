@@ -1,0 +1,104 @@
+<div class="customer-list-container">
+  <mat-card class="header-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>people</mat-icon>
+        Customers Management
+      </mat-card-title>
+      <mat-card-subtitle>Manage your bank customers</mat-card-subtitle>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <div class="actions-row">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search customers</mat-label>
+          <input matInput [formControl]="searchControl" placeholder="Search by name or email">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+        
+        <button mat-raised-button color="primary" (click)="addCustomer()" class="add-button">
+          <mat-icon>add</mat-icon>
+          Add Customer
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="table-card">
+    <mat-card-content>
+      <div class="table-container">
+        <table mat-table [dataSource]="filteredCustomers" class="customers-table">
+          
+          <!-- ID Column -->
+          <ng-container matColumnDef="id">
+            <th mat-header-cell *matHeaderCellDef>ID</th>
+            <td mat-cell *matCellDef="let customer">{{customer.id}}</td>
+          </ng-container>
+
+          <!-- Name Column -->
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Name</th>
+            <td mat-cell *matCellDef="let customer">{{customer.name}}</td>
+          </ng-container>
+
+          <!-- Email Column -->
+          <ng-container matColumnDef="email">
+            <th mat-header-cell *matHeaderCellDef>Email</th>
+            <td mat-cell *matCellDef="let customer">{{customer.email}}</td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let customer">
+              <div class="action-buttons">
+                <button 
+                  mat-icon-button 
+                  color="primary" 
+                  (click)="viewCustomer(customer)"
+                  matTooltip="View customer details">
+                  <mat-icon>visibility</mat-icon>
+                </button>
+                <button 
+                  mat-icon-button 
+                  color="accent" 
+                  (click)="editCustomer(customer)"
+                  matTooltip="Edit customer">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button 
+                  mat-icon-button 
+                  color="warn" 
+                  (click)="deleteCustomer(customer)"
+                  matTooltip="Delete customer">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+
+        <!-- Loading State -->
+        <div *ngIf="isLoading" class="loading-container">
+          <mat-icon class="loading-icon">refresh</mat-icon>
+          <p>Loading customers...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!isLoading && filteredCustomers.length === 0" class="empty-container">
+          <mat-icon class="empty-icon">people_outline</mat-icon>
+          <h3>No customers found</h3>
+          <p *ngIf="searchControl.value">No customers match your search criteria.</p>
+          <p *ngIf="!searchControl.value">No customers have been added yet.</p>
+          <button mat-raised-button color="primary" (click)="addCustomer()" *ngIf="!searchControl.value">
+            <mat-icon>add</mat-icon>
+            Add Your First Customer
+          </button>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

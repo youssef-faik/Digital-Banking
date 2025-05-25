@@ -1,0 +1,102 @@
+<div class="transfer-container">
+  <mat-card class="transfer-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>swap_horiz</mat-icon>
+        Transfer Money
+      </mat-card-title>
+      <mat-card-subtitle>Transfer funds between accounts</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="transferForm" (ngSubmit)="onSubmit()" class="transfer-form">
+        
+        <!-- Source Account ID Field -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>From Account (Source)</mat-label>
+          <input 
+            matInput 
+            formControlName="accountSourceId"
+            placeholder="Enter source account ID"
+            [disabled]="isLoading">
+          <mat-icon matSuffix>account_balance</mat-icon>
+          <mat-error *ngIf="transferForm.get('accountSourceId')?.hasError('required')">
+            Source account ID is required
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Destination Account ID Field -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>To Account (Destination)</mat-label>
+          <input 
+            matInput 
+            formControlName="accountDestinationId"
+            placeholder="Enter destination account ID"
+            [disabled]="isLoading">
+          <mat-icon matSuffix>account_balance_wallet</mat-icon>
+          <mat-error *ngIf="transferForm.get('accountDestinationId')?.hasError('required')">
+            Destination account ID is required
+          </mat-error>
+          <mat-error *ngIf="transferForm.get('accountDestinationId')?.hasError('sameAccount')">
+            Destination account must be different from source account
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Amount Field -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Amount</mat-label>
+          <input 
+            matInput 
+            type="number"
+            step="0.01"
+            formControlName="amount"
+            placeholder="Enter amount to transfer"
+            [disabled]="isLoading">
+          <span matTextPrefix>$&nbsp;</span>
+          <mat-icon matSuffix>money</mat-icon>
+          <mat-error *ngIf="transferForm.get('amount')?.hasError('required')">
+            Amount is required
+          </mat-error>
+          <mat-error *ngIf="transferForm.get('amount')?.hasError('min')">
+            Amount must be greater than 0
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Description Field -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Description</mat-label>
+          <textarea 
+            matInput 
+            formControlName="description"
+            placeholder="Enter transfer description"
+            rows="3"
+            [disabled]="isLoading">
+          </textarea>
+          <mat-icon matSuffix>description</mat-icon>
+          <mat-error *ngIf="transferForm.get('description')?.hasError('required')">
+            Description is required
+          </mat-error>
+        </mat-form-field>
+
+      </form>
+    </mat-card-content>
+
+    <mat-card-actions align="end" class="card-actions">
+      <button mat-button type="button" (click)="cancel()" [disabled]="isLoading">
+        <mat-icon>cancel</mat-icon>
+        Cancel
+      </button>
+      <button 
+        mat-raised-button 
+        color="accent" 
+        type="submit"
+        (click)="onSubmit()"
+        [disabled]="!transferForm.valid || isLoading">
+        <mat-icon *ngIf="isLoading">refresh</mat-icon>
+        <mat-icon *ngIf="!isLoading">swap_horiz</mat-icon>
+        {{isLoading ? 'Processing...' : 'Process Transfer'}}
+      </button>
+    </mat-card-actions>
+
+  </mat-card>
+</div>
