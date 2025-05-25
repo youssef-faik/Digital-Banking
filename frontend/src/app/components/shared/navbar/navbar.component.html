@@ -1,72 +1,104 @@
-<mat-toolbar color="primary" class="navbar">
+<nav class="enhanced-navbar glass-effect">
   <div class="navbar-container">
-    <!-- Logo/Brand -->
+    <!-- Enhanced Logo/Brand -->
     <div class="navbar-brand" (click)="navigateTo('/dashboard')">
-      <mat-icon>account_balance</mat-icon>
-      <span>Digital Banking</span>
+      <div class="brand-icon">
+        <mat-icon>account_balance</mat-icon>
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">Digital Banking</span>
+        <span class="brand-subtitle">Professional Suite</span>
+      </div>
     </div>
 
-    <!-- Navigation Menu (only show when authenticated) -->
+    <!-- Enhanced Navigation Menu -->
     <div class="navbar-menu" *ngIf="isAuthenticated()">
-      <button mat-button routerLink="/dashboard" routerLinkActive="active">
+      <button mat-button routerLink="/dashboard" routerLinkActive="active" class="nav-item">
         <mat-icon>dashboard</mat-icon>
         <span>Dashboard</span>
+        <div class="nav-indicator"></div>
       </button>
       
-      <button mat-button routerLink="/customers" routerLinkActive="active">
+      <button mat-button routerLink="/customers" routerLinkActive="active" class="nav-item">
         <mat-icon>people</mat-icon>
         <span>Customers</span>
+        <div class="nav-indicator"></div>
       </button>
       
-      <button mat-button routerLink="/accounts" routerLinkActive="active">
+      <button mat-button routerLink="/accounts" routerLinkActive="active" class="nav-item">
         <mat-icon>account_balance_wallet</mat-icon>
         <span>Accounts</span>
+        <div class="nav-indicator"></div>
       </button>
       
-      <button mat-button routerLink="/operations" routerLinkActive="active">
+      <button mat-button routerLink="/operations" routerLinkActive="active" class="nav-item">
         <mat-icon>swap_horiz</mat-icon>
         <span>Operations</span>
+        <div class="nav-indicator"></div>
       </button>
-    </div>
-
-    <!-- User Menu -->
+    </div>    <!-- Enhanced User Menu -->
     <div class="navbar-user">
       <div *ngIf="!isAuthenticated()" class="auth-buttons">
-        <button mat-button routerLink="/login">
+        <button mat-button routerLink="/login" class="auth-btn login-btn">
           <mat-icon>login</mat-icon>
           <span>Sign In</span>
         </button>
-        <button mat-raised-button color="accent" routerLink="/register">
+        <button mat-raised-button routerLink="/register" class="auth-btn signup-btn">
           <mat-icon>person_add</mat-icon>
           <span>Sign Up</span>
         </button>
       </div>
 
       <div *ngIf="isAuthenticated()" class="user-menu">
-        <button mat-icon-button [matMenuTriggerFor]="userMenu" class="user-avatar">
-          <mat-icon>account_circle</mat-icon>
+        <div class="user-info-display">
+          <div class="user-avatar-container">
+            <div class="user-avatar-bg">
+              <mat-icon>account_circle</mat-icon>
+            </div>
+            <div class="online-indicator"></div>
+          </div>
+          <div class="user-details">
+            <span class="user-name">{{ currentUser?.name || 'User' }}</span>
+            <span class="user-role">Administrator</span>
+          </div>
+        </div>
+        
+        <button mat-icon-button [matMenuTriggerFor]="userMenu" class="user-menu-trigger">
+          <mat-icon>expand_more</mat-icon>
         </button>
         
-        <mat-menu #userMenu="matMenu" xPosition="before">
-          <div class="user-info">
-            <div class="user-name">{{ currentUser?.name }}</div>
-            <div class="user-email">{{ currentUser?.email }}</div>
+        <mat-menu #userMenu="matMenu" xPosition="before" class="enhanced-user-menu">
+          <div class="menu-header">
+            <div class="menu-user-info">
+              <div class="menu-avatar">
+                <mat-icon>account_circle</mat-icon>
+              </div>
+              <div class="menu-user-details">
+                <div class="menu-user-name">{{ currentUser?.name || 'User' }}</div>
+                <div class="menu-user-email">{{ currentUser?.email || 'user@example.com' }}</div>
+              </div>
+            </div>
           </div>
           <mat-divider></mat-divider>
           
-          <button mat-menu-item routerLink="/profile">
+          <button mat-menu-item routerLink="/profile" class="menu-item">
             <mat-icon>person</mat-icon>
-            <span>Profile</span>
+            <span>Profile Settings</span>
           </button>
           
-          <button mat-menu-item routerLink="/change-password">
+          <button mat-menu-item routerLink="/change-password" class="menu-item">
             <mat-icon>lock</mat-icon>
             <span>Change Password</span>
           </button>
           
+          <button mat-menu-item class="menu-item">
+            <mat-icon>notifications</mat-icon>
+            <span>Notifications</span>
+          </button>
+          
           <mat-divider></mat-divider>
           
-          <button mat-menu-item (click)="logout()">
+          <button mat-menu-item (click)="logout()" class="menu-item logout-item">
             <mat-icon>logout</mat-icon>
             <span>Sign Out</span>
           </button>
@@ -74,4 +106,4 @@
       </div>
     </div>
   </div>
-</mat-toolbar>
+</nav>

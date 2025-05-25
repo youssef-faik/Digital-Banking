@@ -1,155 +1,244 @@
-<div class="dashboard-container">  <div class="dashboard-header">
-    <h1>Dashboard</h1>
-    <div class="dashboard-actions">
-      <button mat-raised-button color="primary" (click)="refreshData()" [disabled]="isLoading">
-        <mat-icon>refresh</mat-icon>
-        Refresh
-      </button>
-      <button mat-raised-button color="warn" (click)="logout()">
-        <mat-icon>logout</mat-icon>
-        Logout
-      </button>
+<div class="dashboard-container">
+  <!-- Enhanced Header with Gradient Background -->
+  <div class="dashboard-header glass-effect">
+    <div class="header-content">
+      <div class="title-section">
+        <h1 class="gradient-text">
+          <mat-icon class="title-icon">dashboard</mat-icon>
+          Dashboard Overview
+        </h1>
+        <p class="subtitle">Welcome back! Here's what's happening with your banking system.</p>
+      </div>      <div class="dashboard-actions">
+        <button mat-raised-button color="primary" (click)="refreshData()" [disabled]="isLoading" class="action-btn">
+          <mat-icon>refresh</mat-icon>
+          Refresh
+        </button>
+      </div>
     </div>
   </div>
 
-  <div *ngIf="isLoading" class="loading-container">
-    <mat-spinner></mat-spinner>
-    <p>Loading dashboard data...</p>
-  </div>
+  <!-- Enhanced Loading State -->
+  <div *ngIf="isLoading" class="loading-container glass-effect">
+    <div class="loading-content">
+      <mat-spinner diameter="60"></mat-spinner>
+      <h3>Loading dashboard data...</h3>
+      <p>Please wait while we gather your banking insights</p>
+    </div>
+  </div>  <!-- Enhanced Main Content -->
   <div *ngIf="!isLoading && stats" class="dashboard-content">
-    <!-- Primary Statistics Cards -->
-    <div class="stats-grid primary-stats">
-      <mat-card class="stat-card customers">
-        <mat-card-header>
-          <mat-icon mat-card-avatar>people</mat-icon>
-          <mat-card-title>Total Customers</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="stat-value">{{ formatNumber(stats.totalCustomers) }}</div>
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card class="stat-card accounts">
-        <mat-card-header>
-          <mat-icon mat-card-avatar>account_balance_wallet</mat-icon>
-          <mat-card-title>Total Accounts</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="stat-value">{{ formatNumber(stats.totalAccounts) }}</div>
-          <div class="stat-details">
-            <span class="current">Current: {{ formatNumber(stats.currentAccountsCount) }}</span>
-            <span class="saving">Saving: {{ formatNumber(stats.savingAccountsCount) }}</span>
+    <!-- Primary Statistics Cards with Enhanced Design -->
+    <div class="stats-section">
+      <h2 class="section-title">
+        <mat-icon>analytics</mat-icon>
+        Key Metrics
+      </h2>
+      <div class="stats-grid primary-stats">        <mat-card class="stat-card customers enhanced-card">
+          <div class="card-decoration customers-decoration"></div>
+          <div class="icon-container customers-icon">
+            <mat-icon>people</mat-icon>
           </div>
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card class="stat-card balance">
-        <mat-card-header>
-          <mat-icon mat-card-avatar>account_balance</mat-icon>
-          <mat-card-title>Total Balance</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="stat-value">{{ formatCurrency(stats.totalBalance) }}</div>
-          <div class="stat-subtitle">
-            Avg: {{ formatCurrency(stats.averageAccountBalance) }}
-          </div>
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card class="stat-card operations">
-        <mat-card-header>
-          <mat-icon mat-card-avatar>swap_horiz</mat-icon>
-          <mat-card-title>Operations Today</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="stat-value">{{ formatNumber(stats.totalOperationsToday) }}</div>
-          <div class="stat-subtitle">
-            Last 24h: {{ formatNumber(stats.operationsLast24Hours) }}
-          </div>
-        </mat-card-content>
-      </mat-card>
-    </div>
-
-    <!-- Secondary Statistics Cards -->
-    <div class="stats-grid secondary-stats">
-      <mat-card class="stat-card transactions">
-        <mat-card-header>
-          <mat-icon mat-card-avatar>trending_up</mat-icon>
-          <mat-card-title>Transaction Volume</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="stat-value small">{{ formatCurrency(stats.averageDailyTransactionVolume) }}</div>
-          <div class="stat-subtitle">Daily Average</div>
-          <div class="stat-details">
-            <span class="credit">Credit: {{ formatCurrency(stats.totalCreditAmount) }}</span>
-            <span class="debit">Debit: {{ formatCurrency(stats.totalDebitAmount) }}</span>
-          </div>
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card class="stat-card activity">
-        <mat-card-header>
-          <mat-icon mat-card-avatar>history</mat-icon>
-          <mat-card-title>Activity Summary</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="activity-stats">
-            <div class="activity-item">
-              <span class="period">This Week:</span>
-              <span class="value">{{ formatNumber(stats.totalOperationsThisWeek) }}</span>
+          <mat-card-header>
+            <mat-card-title>Total Customers</mat-card-title>
+            <mat-card-subtitle>Active user base</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="stat-value">{{ formatNumber(stats.totalCustomers) }}</div>
+            <div class="stat-growth">
+              <mat-icon class="growth-icon positive">trending_up</mat-icon>
+              <span class="growth-text">+12% this month</span>
             </div>
-            <div class="activity-item">
-              <span class="period">This Month:</span>
-              <span class="value">{{ formatNumber(stats.totalOperationsThisMonth) }}</span>
-            </div>
+          </mat-card-content>
+        </mat-card>        <mat-card class="stat-card accounts enhanced-card">
+          <div class="card-decoration accounts-decoration"></div>
+          <div class="icon-container accounts-icon">
+            <mat-icon>account_balance_wallet</mat-icon>
           </div>
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card class="stat-card balance-range">
-        <mat-card-header>
-          <mat-icon mat-card-avatar>analytics</mat-icon>
-          <mat-card-title>Balance Range</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="balance-stats">
-            <div class="balance-item">
-              <span class="label">Highest:</span>
-              <span class="value high">{{ formatCurrency(stats.highestAccountBalance) }}</span>
+          <mat-card-header>
+            <mat-card-title>Total Accounts</mat-card-title>
+            <mat-card-subtitle>Banking accounts</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="stat-value">{{ formatNumber(stats.totalAccounts) }}</div>
+            <div class="stat-details enhanced-details">
+              <div class="detail-item current">
+                <mat-icon>account_balance</mat-icon>
+                <span>Current: {{ formatNumber(stats.currentAccountsCount) }}</span>
+              </div>
+              <div class="detail-item saving">
+                <mat-icon>savings</mat-icon>
+                <span>Saving: {{ formatNumber(stats.savingAccountsCount) }}</span>
+              </div>
             </div>
-            <div class="balance-item">
-              <span class="label">Lowest:</span>
-              <span class="value low">{{ formatCurrency(stats.lowestAccountBalance) }}</span>
-            </div>
+          </mat-card-content>
+        </mat-card>        <mat-card class="stat-card balance enhanced-card">
+          <div class="card-decoration balance-decoration"></div>
+          <div class="icon-container balance-icon">
+            <mat-icon>account_balance</mat-icon>
           </div>
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card class="stat-card account-status">
-        <mat-card-header>
-          <mat-icon mat-card-avatar>verified</mat-icon>
-          <mat-card-title>Account Status</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="status-stats">
-            <div class="status-item active">
-              <mat-icon>check_circle</mat-icon>
-              <span>Active: {{ formatNumber(stats.activeAccountsCount) }}</span>
+          <mat-card-header>
+            <mat-card-title>Total Balance</mat-card-title>
+            <mat-card-subtitle>All accounts combined</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="stat-value balance-value">{{ formatCurrency(stats.totalBalance) }}</div>
+            <div class="stat-subtitle enhanced-subtitle">
+              <mat-icon>trending_up</mat-icon>
+              Average: {{ formatCurrency(stats.averageAccountBalance) }}
             </div>
-            <div class="status-item suspended">
-              <mat-icon>pause_circle</mat-icon>
-              <span>Suspended: {{ formatNumber(stats.suspendedAccountsCount) }}</span>
-            </div>
+          </mat-card-content>
+        </mat-card>        <mat-card class="stat-card operations enhanced-card">
+          <div class="card-decoration operations-decoration"></div>
+          <div class="icon-container operations-icon">
+            <mat-icon>swap_horiz</mat-icon>
           </div>
-        </mat-card-content>
-      </mat-card>
-    </div><!-- Charts Section -->
+          <mat-card-header>
+            <mat-card-title>Operations Today</mat-card-title>
+            <mat-card-subtitle>Daily transactions</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="stat-value">{{ formatNumber(stats.totalOperationsToday) }}</div>
+            <div class="stat-subtitle enhanced-subtitle">
+              <mat-icon>schedule</mat-icon>
+              Last 24h: {{ formatNumber(stats.operationsLast24Hours) }}
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>    <!-- Secondary Statistics with Modern Design -->
+    <div class="stats-section">
+      <h2 class="section-title">
+        <mat-icon>insights</mat-icon>
+        Detailed Analytics
+      </h2>
+      <div class="stats-grid secondary-stats">        <mat-card class="stat-card transactions enhanced-card">
+          <div class="card-decoration transactions-decoration"></div>
+          <div class="icon-container transactions-icon">
+            <mat-icon>trending_up</mat-icon>
+          </div>
+          <mat-card-header>
+            <mat-card-title>Transaction Volume</mat-card-title>
+            <mat-card-subtitle>Daily average flow</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="stat-value small">{{ formatCurrency(stats.averageDailyTransactionVolume) }}</div>
+            <div class="stat-subtitle">Daily Average</div>
+            <div class="stat-details enhanced-details transaction-details">
+              <div class="detail-item credit">
+                <mat-icon>add_circle</mat-icon>
+                <span>Credit: {{ formatCurrency(stats.totalCreditAmount) }}</span>
+              </div>
+              <div class="detail-item debit">
+                <mat-icon>remove_circle</mat-icon>
+                <span>Debit: {{ formatCurrency(stats.totalDebitAmount) }}</span>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>        <mat-card class="stat-card activity enhanced-card">
+          <div class="card-decoration activity-decoration"></div>
+          <div class="icon-container activity-icon">
+            <mat-icon>history</mat-icon>
+          </div>
+          <mat-card-header>
+            <mat-card-title>Activity Summary</mat-card-title>
+            <mat-card-subtitle>Recent performance</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="activity-stats enhanced-activity">
+              <div class="activity-item">
+                <div class="activity-label">
+                  <mat-icon>date_range</mat-icon>
+                  <span class="period">This Week</span>
+                </div>
+                <span class="value highlight">{{ formatNumber(stats.totalOperationsThisWeek) }}</span>
+              </div>
+              <div class="activity-item">
+                <div class="activity-label">
+                  <mat-icon>calendar_month</mat-icon>
+                  <span class="period">This Month</span>
+                </div>
+                <span class="value highlight">{{ formatNumber(stats.totalOperationsThisMonth) }}</span>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>        <mat-card class="stat-card balance-range enhanced-card">
+          <div class="card-decoration balance-range-decoration"></div>
+          <div class="icon-container balance-range-icon">
+            <mat-icon>analytics</mat-icon>
+          </div>
+          <mat-card-header>
+            <mat-card-title>Balance Range</mat-card-title>
+            <mat-card-subtitle>Account extremes</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="balance-stats enhanced-balance">
+              <div class="balance-item">
+                <div class="balance-label">
+                  <mat-icon class="high-icon">keyboard_arrow_up</mat-icon>
+                  <span class="label">Highest</span>
+                </div>
+                <span class="value high">{{ formatCurrency(stats.highestAccountBalance) }}</span>
+              </div>
+              <div class="balance-item">
+                <div class="balance-label">
+                  <mat-icon class="low-icon">keyboard_arrow_down</mat-icon>
+                  <span class="label">Lowest</span>
+                </div>
+                <span class="value low">{{ formatCurrency(stats.lowestAccountBalance) }}</span>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>        <mat-card class="stat-card account-status enhanced-card">
+          <div class="card-decoration status-decoration"></div>
+          <div class="icon-container status-icon">
+            <mat-icon>verified</mat-icon>
+          </div>
+          <mat-card-header>
+            <mat-card-title>Account Status</mat-card-title>
+            <mat-card-subtitle>Current state overview</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="status-stats enhanced-status">
+              <div class="status-item active">
+                <div class="status-info">
+                  <mat-icon class="status-icon-check">check_circle</mat-icon>
+                  <span class="status-label">Active Accounts</span>
+                </div>
+                <span class="status-value">{{ formatNumber(stats.activeAccountsCount) }}</span>
+              </div>
+              <div class="status-item suspended">
+                <div class="status-info">
+                  <mat-icon class="status-icon-pause">pause_circle</mat-icon>
+                  <span class="status-label">Suspended</span>
+                </div>
+                <span class="status-value">{{ formatNumber(stats.suspendedAccountsCount) }}</span>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>    <!-- Enhanced Charts Section -->
     <div class="charts-section" *ngIf="chartData">
+      <h2 class="section-title">
+        <mat-icon>bar_chart</mat-icon>
+        Visual Analytics
+      </h2>
       <div class="charts-grid">
         <!-- Operations Trend Chart -->
-        <mat-card class="chart-card">
+        <mat-card class="chart-card enhanced-chart-card">
+          <div class="chart-decoration trend-decoration"></div>
           <mat-card-header>
-            <mat-card-title>Operations Trend (Last 7 Days)</mat-card-title>
+            <div class="chart-header">
+              <div class="chart-title-section">
+                <mat-icon class="chart-icon">show_chart</mat-icon>
+                <div>
+                  <mat-card-title>Operations Trend</mat-card-title>
+                  <mat-card-subtitle>Last 7 days performance</mat-card-subtitle>
+                </div>
+              </div>
+              <button mat-icon-button class="chart-action">
+                <mat-icon>more_vert</mat-icon>
+              </button>
+            </div>
           </mat-card-header>
           <mat-card-content>
             <div class="chart-container">
@@ -163,9 +252,21 @@
         </mat-card>
 
         <!-- Account Type Distribution Chart -->
-        <mat-card class="chart-card">
+        <mat-card class="chart-card enhanced-chart-card">
+          <div class="chart-decoration distribution-decoration"></div>
           <mat-card-header>
-            <mat-card-title>Account Type Distribution</mat-card-title>
+            <div class="chart-header">
+              <div class="chart-title-section">
+                <mat-icon class="chart-icon">donut_large</mat-icon>
+                <div>
+                  <mat-card-title>Account Distribution</mat-card-title>
+                  <mat-card-subtitle>Current vs Saving accounts</mat-card-subtitle>
+                </div>
+              </div>
+              <button mat-icon-button class="chart-action">
+                <mat-icon>more_vert</mat-icon>
+              </button>
+            </div>
           </mat-card-header>
           <mat-card-content>
             <div class="chart-container">
@@ -180,33 +281,60 @@
       </div>
     </div>
 
-    <!-- Quick Actions -->
+    <!-- Enhanced Quick Actions -->
     <div class="quick-actions-section">
-      <mat-card class="quick-actions-card">
-        <mat-card-header>
-          <mat-card-title>Quick Actions</mat-card-title>
-        </mat-card-header>
+      <h2 class="section-title">
+        <mat-icon>flash_on</mat-icon>
+        Quick Actions
+      </h2>
+      <mat-card class="quick-actions-card enhanced-actions-card">
+        <div class="actions-decoration"></div>
         <mat-card-content>
-          <div class="action-buttons">
-            <button mat-raised-button color="primary" routerLink="/customers/new">
-              <mat-icon>person_add</mat-icon>
-              Add Customer
+          <div class="action-buttons enhanced-action-buttons">
+            <button mat-raised-button color="primary" routerLink="/customers/new" class="action-btn primary-action">
+              <div class="btn-content">
+                <mat-icon>person_add</mat-icon>
+                <div class="btn-text">
+                  <span class="btn-title">Add Customer</span>
+                  <span class="btn-subtitle">Create new customer profile</span>
+                </div>
+              </div>
             </button>
-            <button mat-raised-button color="accent" routerLink="/accounts/new">
-              <mat-icon>add_circle</mat-icon>
-              Create Account
+            <button mat-raised-button color="accent" routerLink="/accounts/new" class="action-btn accent-action">
+              <div class="btn-content">
+                <mat-icon>add_circle</mat-icon>
+                <div class="btn-text">
+                  <span class="btn-title">Create Account</span>
+                  <span class="btn-subtitle">Open new bank account</span>
+                </div>
+              </div>
             </button>
-            <button mat-raised-button routerLink="/operations/transfer">
-              <mat-icon>swap_horiz</mat-icon>
-              Transfer Money
+            <button mat-raised-button routerLink="/operations/transfer" class="action-btn transfer-action">
+              <div class="btn-content">
+                <mat-icon>swap_horiz</mat-icon>
+                <div class="btn-text">
+                  <span class="btn-title">Transfer Money</span>
+                  <span class="btn-subtitle">Move funds between accounts</span>
+                </div>
+              </div>
             </button>
-            <button mat-stroked-button routerLink="/operations/debit">
-              <mat-icon>remove_circle</mat-icon>
-              Debit
+            <button mat-stroked-button routerLink="/operations/debit" class="action-btn debit-action">
+              <div class="btn-content">
+                <mat-icon>remove_circle</mat-icon>
+                <div class="btn-text">
+                  <span class="btn-title">Debit</span>
+                  <span class="btn-subtitle">Withdraw from account</span>
+                </div>
+              </div>
             </button>
-            <button mat-stroked-button routerLink="/operations/credit">
-              <mat-icon>add_circle_outline</mat-icon>
-              Credit
+            <button mat-stroked-button routerLink="/operations/credit" class="action-btn credit-action">
+              <div class="btn-content">
+                <mat-icon>add_circle_outline</mat-icon>
+                <div class="btn-text">
+                  <span class="btn-title">Credit</span>
+                  <span class="btn-subtitle">Deposit to account</span>
+                </div>
+              </div>
             </button>
           </div>
         </mat-card-content>

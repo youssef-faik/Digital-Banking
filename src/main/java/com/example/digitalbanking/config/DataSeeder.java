@@ -41,69 +41,34 @@ public class DataSeeder implements CommandLineRunner {
         this.bankAccountRepository = bankAccountRepository;
         this.accountOperationRepository = accountOperationRepository;
         this.passwordEncoder = passwordEncoder;
-    }    @Override
+    }
+
+    @Override
     public void run(String... args) throws Exception {
-        if (shouldSeedData()) {
-            log.info("Starting data seeding...");
-            seedData();
-            log.info("Data seeding completed successfully!");
+        if (appUserRepository.count() == 0) {
+            log.info("No existing users found. Seeding demo users and their data...");
+            seedDemoUsersAndData();
+            log.info("Demo users and data seeding completed successfully!");
         } else {
-            log.info("Data already exists, but checking if sample data is needed...");
-            // Check if existing users need sample data
-            seedSampleDataForExistingUsers();
+            log.warn("AppUser table is not empty (found {} users). Skipping demo data seeding.", appUserRepository.count());
         }
     }
 
-    private boolean shouldSeedData() {
-        // Check if data already exists
-        return appUserRepository.count() == 0;
-    }
-    
-    private void seedSampleDataForExistingUsers() {
-        // Check if any user has customers and accounts
-        long totalCustomers = customerRepository.count();
-        long totalAccounts = bankAccountRepository.count();
-        
-        if (totalCustomers == 0 || totalAccounts == 0) {
-            log.info("Found existing users but no sample data. Creating sample data...");
-            
-            // Get existing users (excluding admin if present)
-            List<AppUser> existingUsers = appUserRepository.findAll().stream()
-                .filter(user -> !user.getUsername().equals("admin"))
-                .limit(3) // Limit to first 3 non-admin users
-                .toList();
-                
-            if (!existingUsers.isEmpty()) {
-                for (AppUser user : existingUsers) {
-                    createCustomersAndAccountsForUser(user, 3, 5);
-                }
-                
-                // Create sample operations for all accounts
-                createSampleOperations();
-                log.info("Sample data created for existing users!");
-            }
-        } else {
-            log.info("Sample data already exists, no action needed.");
-        }
-    }
-
-    private void seedData() {
+    private void seedDemoUsersAndData() {
         // Create roles
-        Role adminRole = createRoleIfNotExists("ADMIN");
         Role userRole = createRoleIfNotExists("USER");
+        Role adminRole = createRoleIfNotExists("ADMIN");
+        Role managerRole = createRoleIfNotExists("MANAGER");
 
-        // Create admin user
-        AppUser adminUser = createAdminUser(adminRole, userRole);
-        
-        // Create demo users
-        AppUser demoUser1 = createDemoUser("john_doe", "john.doe@example.com", userRole);
-        AppUser demoUser2 = createDemoUser("jane_smith", "jane.smith@example.com", userRole);
-        AppUser demoUser3 = createDemoUser("bob_wilson", "bob.wilson@example.com", userRole);
+        // Create demo users with different roles and role-based usernames
+        AppUser demoAdmin = createDemoUser("admin_user", "admin.user@example.com", adminRole); 
+        AppUser demoManager = createDemoUser("manager_user", "manager.user@example.com", managerRole); 
+        AppUser demoUser = createDemoUser("user_demo", "user.demo@example.com", userRole); 
 
         // Create customers and accounts for each user
-        createCustomersAndAccountsForUser(demoUser1, 3, 5);
-        createCustomersAndAccountsForUser(demoUser2, 2, 4);
-        createCustomersAndAccountsForUser(demoUser3, 4, 6);
+        createCustomersAndAccountsForUser(demoAdmin, 3, 5); 
+        createCustomersAndAccountsForUser(demoManager, 2, 4); 
+        createCustomersAndAccountsForUser(demoUser, 4, 6); 
 
         // Create sample operations for all accounts
         createSampleOperations();
@@ -118,21 +83,12 @@ public class DataSeeder implements CommandLineRunner {
             });
     }
 
-    private AppUser createAdminUser(Role adminRole, Role userRole) {
-        AppUser adminUser = new AppUser();
-        adminUser.setUsername("admin");
-        adminUser.setEmail("admin@digitalbanking.com");
-        adminUser.setPassword(passwordEncoder.encode("admin123"));
-        adminUser.setRoles(List.of(adminRole, userRole));
-        return appUserRepository.save(adminUser);
-    }
-
     private AppUser createDemoUser(String username, String email, Role userRole) {
         AppUser user = new AppUser();
         user.setUsername(username);
         user.setEmail(email);
-        user.setPassword(passwordEncoder.encode("password123"));
-        user.setRoles(List.of(userRole));
+        user.setPassword(passwordEncoder.encode("password123")); // Common password for demo users
+        user.setRoles(List.of(userRole)); // Assign the provided role
         return appUserRepository.save(user);
     }
 
@@ -207,6 +163,10 @@ public class DataSeeder implements CommandLineRunner {
         log.info("Creating sample operations for all accounts...");
         
         List<BankAccount> allAccounts = bankAccountRepository.findAll();
+        if (allAccounts.isEmpty()) {
+            log.warn("No bank accounts found to create operations for. This might happen if customer/account creation failed for demo users.");
+            return;
+        }
         
         for (BankAccount account : allAccounts) {
             createOperationsForAccount(account);

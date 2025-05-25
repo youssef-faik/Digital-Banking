@@ -38,17 +38,17 @@
       display: flex;
       align-items: center;
       gap: 16px;
-    }    .subtitle {
+    }
+    
+    .subtitle {
       margin: 0;
       font-size: 1.1rem;
-      color: #5a67d8;
-      font-weight: 500;
-      text-shadow: none;
-      opacity: 1;
-      display: block;
+      color: rgba(255, 255, 255, 0.8);
+      font-weight: 400;
     }
   }
-    .dashboard-actions button {
+  
+  .dashboard-actions button {
     border-radius: 12px;
     padding: 12px 24px;
     font-weight: 600;
@@ -68,10 +68,6 @@
     
     mat-icon {
       margin-right: 8px;
-      font-size: 20px !important;
-      width: 20px !important;
-      height: 20px !important;
-      line-height: 1 !important;
     }
   }
 }
@@ -118,13 +114,10 @@
   
   mat-icon {
     background: linear-gradient(135deg, #667eea, #764ba2);
-    color: white !important;
+    color: white;
     padding: 8px;
     border-radius: 8px;
-    font-size: 1.2rem !important;
-    width: auto !important;
-    height: auto !important;
-    line-height: 1 !important;
+    font-size: 1.2rem;
   }
 }
 
@@ -167,98 +160,46 @@
     transition: opacity 0.3s ease;
   }  
   
-  // Icon gradient classes - individual definitions
-  .customers-icon { 
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-    &:hover { box-shadow: 0 12px 30px rgba(102, 126, 234, 0.6); }
-  }
-  .customers-decoration { background: linear-gradient(135deg, #667eea, #764ba2); }
-
-  .accounts-icon { 
-    background: linear-gradient(135deg, #f093fb, #f5576c);
-    box-shadow: 0 8px 20px rgba(240, 147, 251, 0.4);
-    &:hover { box-shadow: 0 12px 30px rgba(240, 147, 251, 0.6); }
-  }
-  .accounts-decoration { background: linear-gradient(135deg, #f093fb, #f5576c); }
-
-  .balance-icon { 
-    background: linear-gradient(135deg, #4facfe, #00f2fe);
-    box-shadow: 0 8px 20px rgba(79, 172, 254, 0.4);
-    &:hover { box-shadow: 0 12px 30px rgba(79, 172, 254, 0.6); }
-  }
-  .balance-decoration { background: linear-gradient(135deg, #4facfe, #00f2fe); }
-
-  .operations-icon { 
-    background: linear-gradient(135deg, #43e97b, #38f9d7);
-    box-shadow: 0 8px 20px rgba(67, 233, 123, 0.4);
-    &:hover { box-shadow: 0 12px 30px rgba(67, 233, 123, 0.6); }
-  }
-  .operations-decoration { background: linear-gradient(135deg, #43e97b, #38f9d7); }
-
-  .transactions-icon { 
-    background: linear-gradient(135deg, #fa709a, #fee140);
-    box-shadow: 0 8px 20px rgba(250, 112, 154, 0.4);
-    &:hover { box-shadow: 0 12px 30px rgba(250, 112, 154, 0.6); }
-  }
-  .transactions-decoration { background: linear-gradient(135deg, #fa709a, #fee140); }
-
-  .activity-icon { 
-    background: linear-gradient(135deg, #a8edea, #fed6e3);
-    box-shadow: 0 8px 20px rgba(168, 237, 234, 0.4);
-    &:hover { box-shadow: 0 12px 30px rgba(168, 237, 234, 0.6); }
-  }
-  .activity-decoration { background: linear-gradient(135deg, #a8edea, #fed6e3); }
-
-  .balance-range-icon { 
-    background: linear-gradient(135deg, #ffecd2, #fcb69f);
-    box-shadow: 0 8px 20px rgba(255, 236, 210, 0.4);
-    &:hover { box-shadow: 0 12px 30px rgba(255, 236, 210, 0.6); }
-  }
-  .balance-range-decoration { background: linear-gradient(135deg, #ffecd2, #fcb69f); }
-
-  .status-icon { 
-    background: linear-gradient(135deg, #a1c4fd, #c2e9fb);
-    box-shadow: 0 8px 20px rgba(161, 196, 253, 0.4);
-    &:hover { box-shadow: 0 12px 30px rgba(161, 196, 253, 0.6); }
-  }
-  .status-decoration { background: linear-gradient(135deg, #a1c4fd, #c2e9fb); }  // Icon positioned in top-right corner
-  .icon-container {
-    position: absolute;
-    top: 16px;
-    right: 16px;
-    width: 56px;
-    height: 56px;
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.3s ease;
-    z-index: 10;
+  // Icon gradient classes - consolidated
+  @mixin icon-gradient($color1, $color2, $shadow-color) {
+    background: linear-gradient(135deg, $color1, $color2);
+    box-shadow: 0 8px 20px rgba($shadow-color, 0.4);
     
-    mat-icon {
-      font-size: 28px;
-      width: 28px;
-      height: 28px;
-      color: white;
-      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-      font-family: 'Material Icons';
-      font-weight: normal;
-      font-style: normal;
-      line-height: 1;
-      text-transform: none;
-      letter-spacing: normal;
-      word-wrap: normal;
-      white-space: nowrap;
-      direction: ltr;
-      -webkit-font-smoothing: antialiased;
-      text-rendering: optimizeLegibility;
+    &:hover {
+      box-shadow: 0 12px 30px rgba($shadow-color, 0.6);
     }
   }
-
+  
+  .customers-icon, .customers-decoration { @include icon-gradient(#667eea, #764ba2, 102, 126, 234); }
+  .accounts-icon, .accounts-decoration { @include icon-gradient(#f093fb, #f5576c, 240, 147, 251); }
+  .balance-icon, .balance-decoration { @include icon-gradient(#4facfe, #00f2fe, 79, 172, 254); }
+  .operations-icon, .operations-decoration { @include icon-gradient(#43e97b, #38f9d7, 67, 233, 123); }
+  .transactions-icon, .transactions-decoration { @include icon-gradient(#fa709a, #fee140, 250, 112, 154); }
+  .activity-icon, .activity-decoration { @include icon-gradient(#a8edea, #fed6e3, 168, 237, 234); }
+  .balance-range-icon, .balance-range-decoration { @include icon-gradient(#ffecd2, #fcb69f, 255, 236, 210); }
+  .status-icon, .status-decoration { @include icon-gradient(#a1c4fd, #c2e9fb, 161, 196, 253); }
+  
   mat-card-header {
     padding-bottom: 16px;
-    padding-right: 80px; // Make room for the icon
+    
+    .icon-container {
+      width: 64px;
+      height: 64px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 16px;
+      transition: transform 0.3s ease;
+      
+      mat-icon {
+        font-size: 32px;
+        width: 32px;
+        height: 32px;
+        color: white;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+      }
+    }
     
     mat-card-title {
       font-size: 1.1rem;
@@ -290,19 +231,19 @@
         background-clip: text;
       }
     }
-      .stat-growth {
+    
+    .stat-growth {
       display: flex;
       align-items: center;
       gap: 6px;
       
       .growth-icon {
-        font-size: 16px !important;
-        width: 16px !important;
-        height: 16px !important;
-        line-height: 1 !important;
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
         
-        &.positive { color: #4caf50 !important; }
-        &.negative { color: #f44336 !important; }
+        &.positive { color: #4caf50; }
+        &.negative { color: #f44336; }
       }
       
       .growth-text {
@@ -320,10 +261,9 @@
       color: rgba(0, 0, 0, 0.6);
       
       mat-icon {
-        font-size: 16px !important;
-        width: 16px !important;
-        height: 16px !important;
-        line-height: 1 !important;
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
       }
     }
   }
@@ -335,7 +275,8 @@
   flex-direction: column;
   gap: 12px;
   margin-top: 16px;
-    .detail-item {
+  
+  .detail-item {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -345,10 +286,9 @@
     font-weight: 500;
     
     mat-icon {
-      font-size: 16px !important;
-      width: 16px !important;
-      height: 16px !important;
-      line-height: 1 !important;
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
     }
     
     &.current { background: rgba(63, 81, 181, 0.1); color: #3f51b5; }
@@ -359,16 +299,16 @@
 }
 
 // Enhanced activity with simplified structure
-.enhanced-activity .activity-item, 
-.enhanced-balance .balance-item, 
-.enhanced-status .status-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  
-  &:last-child { border-bottom: none; }
+.enhanced-activity, .enhanced-balance, .enhanced-status {
+  .activity-item, .balance-item, .status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    
+    &:last-child { border-bottom: none; }
+  }
 }
 
 .enhanced-status .status-item {
@@ -436,16 +376,16 @@
       transform: translateY(-2px);
       box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
     }
-      .btn-content {
+    
+    .btn-content {
       display: flex;
       align-items: center;
       gap: 16px;
       
       mat-icon {
-        font-size: 24px !important;
-        width: 24px !important;
-        height: 24px !important;
-        line-height: 1 !important;
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
       }
       
       .btn-text {
@@ -532,17 +472,17 @@
   .enhanced-card mat-card-content .stat-value {
     font-size: 1.8rem;
   }
-    .enhanced-action-buttons .action-btn {
+  
+  .enhanced-action-buttons .action-btn {
     padding: 16px;
     
     .btn-content {
       gap: 12px;
       
       mat-icon {
-        font-size: 20px !important;
-        width: 20px !important;
-        height: 20px !important;
-        line-height: 1 !important;
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
       }
     }
   }

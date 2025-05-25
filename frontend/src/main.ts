@@ -2,23 +2,19 @@ import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
 import { AppComponent } from './app/app.component';
 
-// Register Chart.js components
+// Register only essential Chart.js components
 import {
   Chart,
   CategoryScale,
   LinearScale,
   PointElement,
   LineElement,
-  BarElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend,
-  ArcElement,
-  Filler,
   LineController,
-  BarController,
-  DoughnutController,
-  PieController
+  DoughnutController
 } from 'chart.js';
 
 Chart.register(
@@ -26,16 +22,12 @@ Chart.register(
   LinearScale,
   PointElement,
   LineElement,
-  BarElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend,
-  ArcElement,
-  Filler,
   LineController,
-  BarController,
-  DoughnutController,
-  PieController
+  DoughnutController
 );
 
 bootstrapApplication(AppComponent, appConfig)
