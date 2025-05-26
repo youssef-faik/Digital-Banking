@@ -3,6 +3,7 @@ package com.example.digitalbanking.services;
 import com.example.digitalbanking.dtos.AppUserDTO;
 import com.example.digitalbanking.dtos.ChangePasswordRequestDTO;
 import com.example.digitalbanking.dtos.RegisterRequestDTO;
+import com.example.digitalbanking.dtos.UpdateProfileRequestDTO;
 import com.example.digitalbanking.entities.AppUser;
 import com.example.digitalbanking.entities.Role;
 import com.example.digitalbanking.mappers.UserMapper;
@@ -67,12 +68,32 @@ public class AuthServiceImpl implements AuthService {
         }
         appUser.setPassword(passwordEncoder.encode(changePasswordRequestDTO.getNewPassword()));
         appUserRepository.save(appUser);
-    }
-
-    @Override
+    }    @Override
     public AppUserDTO getAuthenticatedUser(String username) {
         AppUser appUser = appUserRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return userMapper.toAppUserDTO(appUser);
+    }
+
+    @Override
+    public AppUserDTO updateProfile(String username, UpdateProfileRequestDTO updateProfileRequestDTO) {
+        AppUser appUser = appUserRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Check if the new email is already in use by another user
+        if (!appUser.getEmail().equals(updateProfileRequestDTO.getEmail())) {
+            appUserRepository.findByEmail(updateProfileRequestDTO.getEmail())
+                    .ifPresent(existingUser -> {
+                        if (!existingUser.getUserId().equals(appUser.getUserId())) {
+                            throw new RuntimeException("Email is already in use by another user");
+                        }
+                    });
+        }
+
+        // Update the email
+        appUser.setEmail(updateProfileRequestDTO.getEmail());
+        
+        AppUser savedUser = appUserRepository.save(appUser);
+        return userMapper.toAppUserDTO(savedUser);
     }
 }

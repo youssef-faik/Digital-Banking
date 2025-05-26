@@ -68,13 +68,22 @@ export class AuthService {
   changePassword(changePasswordRequest: ChangePasswordRequest): Observable<any> {
     return this.http.post(`${this.apiUrl}/change-password`, changePasswordRequest);
   }
-
   getMe(): Observable<AppUser> {
     return this.http.get<AppUser>(`${this.apiUrl}/me`)
       .pipe(
         tap(user => {
           this.setCurrentUser(user);
           this.currentUserSubject.next(user);
+        })
+      );
+  }
+
+  updateProfile(profileData: { email: string }): Observable<AppUser> {
+    return this.http.put<AppUser>(`${this.apiUrl}/profile`, profileData)
+      .pipe(
+        tap(updatedUser => {
+          this.setCurrentUser(updatedUser);
+          this.currentUserSubject.next(updatedUser);
         })
       );
   }

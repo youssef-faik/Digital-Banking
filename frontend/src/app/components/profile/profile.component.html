@@ -1,0 +1,380 @@
+<div class="profile-container" *ngIf="!isLoading; else loadingTemplate">
+  
+  <!-- Profile Header -->
+  <div class="profile-header">
+    <mat-card class="profile-header-card">
+      <mat-card-content>
+        <div class="profile-header-content">
+          <div class="profile-avatar">
+            <div class="avatar-circle">
+              <span class="avatar-initials">{{ getInitials(currentUser?.username) }}</span>
+            </div>
+            <div class="online-indicator"></div>
+          </div>
+          
+          <div class="profile-info">
+            <h1 class="profile-name">{{ currentUser?.username }}</h1>
+            <p class="profile-email">{{ currentUser?.email }}</p>
+            
+            <div class="profile-roles">
+              <mat-chip-listbox>
+                <mat-chip 
+                  *ngFor="let role of currentUser?.roles" 
+                  [color]="getRoleChipColor(role)"
+                  selected>
+                  <mat-icon>{{ role === 'ADMIN' ? 'admin_panel_settings' : 'person' }}</mat-icon>
+                  {{ role }}
+                </mat-chip>
+              </mat-chip-listbox>
+            </div>
+          </div>
+          
+          <div class="profile-actions">
+            <button 
+              mat-raised-button 
+              color="primary" 
+              (click)="toggleEdit()"
+              [disabled]="isSaving">
+              <mat-icon>{{ isEditing ? 'cancel' : 'edit' }}</mat-icon>
+              {{ isEditing ? 'Cancel' : 'Edit Profile' }}
+            </button>
+            
+            <button 
+              mat-raised-button 
+              color="accent" 
+              routerLink="/profile/change-password">
+              <mat-icon>lock</mat-icon>
+              Change Password
+            </button>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Profile Content Tabs -->
+  <mat-tab-group class="profile-tabs" animationDuration="300ms">
+    
+    <!-- Profile Information Tab -->
+    <mat-tab label="Profile Information">
+      <ng-template matTabContent>
+        <div class="tab-content">
+          <mat-card class="profile-form-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>person</mat-icon>
+                Personal Information
+              </mat-card-title>
+              <mat-card-subtitle>
+                Manage your account details and preferences
+              </mat-card-subtitle>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <form [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+                <div class="form-grid">
+                  
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Username</mat-label>
+                    <input matInput formControlName="username" readonly>
+                    <mat-icon matSuffix>account_circle</mat-icon>
+                    <mat-hint>Username cannot be changed</mat-hint>
+                  </mat-form-field>
+                  
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Email Address</mat-label>
+                    <input 
+                      matInput 
+                      formControlName="email" 
+                      type="email"
+                      [readonly]="!isEditing">
+                    <mat-icon matSuffix>email</mat-icon>
+                    <mat-error *ngIf="profileForm.get('email')?.hasError('required')">
+                      Email is required
+                    </mat-error>
+                    <mat-error *ngIf="profileForm.get('email')?.hasError('email')">
+                      Please enter a valid email address
+                    </mat-error>
+                  </mat-form-field>
+                  
+                </div>
+                
+                <div class="form-actions" *ngIf="isEditing">
+                  <button 
+                    mat-raised-button 
+                    color="primary" 
+                    type="submit"
+                    [disabled]="profileForm.invalid || isSaving">
+                    <mat-icon>save</mat-icon>
+                    <span *ngIf="!isSaving">Save Changes</span>
+                    <span *ngIf="isSaving">Saving...</span>
+                    <mat-spinner 
+                      *ngIf="isSaving" 
+                      diameter="20" 
+                      class="inline-spinner">
+                    </mat-spinner>
+                  </button>
+                  
+                  <button 
+                    mat-button 
+                    type="button" 
+                    (click)="toggleEdit()"
+                    [disabled]="isSaving">
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </ng-template>
+    </mat-tab>
+    
+    <!-- Account Statistics Tab -->
+    <mat-tab label="Account Statistics">
+      <ng-template matTabContent>
+        <div class="tab-content">
+          
+          <!-- Quick Stats Grid -->
+          <div class="stats-grid" *ngIf="dashboardStats">
+            
+            <mat-card class="stat-card total-accounts">
+              <mat-card-content>
+                <div class="stat-content">
+                  <div class="stat-icon">
+                    <mat-icon>account_balance_wallet</mat-icon>
+                  </div>
+                  <div class="stat-info">
+                    <h3 class="stat-number">{{ dashboardStats.totalAccounts }}</h3>
+                    <p class="stat-label">Total Accounts</p>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+            
+            <mat-card class="stat-card total-customers">
+              <mat-card-content>
+                <div class="stat-content">
+                  <div class="stat-icon">
+                    <mat-icon>people</mat-icon>
+                  </div>
+                  <div class="stat-info">
+                    <h3 class="stat-number">{{ dashboardStats.totalCustomers }}</h3>
+                    <p class="stat-label">Total Customers</p>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+            
+            <mat-card class="stat-card total-balance">
+              <mat-card-content>
+                <div class="stat-content">
+                  <div class="stat-icon">
+                    <mat-icon>attach_money</mat-icon>
+                  </div>
+                  <div class="stat-info">
+                    <h3 class="stat-number">{{ formatCurrency(dashboardStats.totalBalance) }}</h3>
+                    <p class="stat-label">Total Balance</p>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+            
+            <mat-card class="stat-card operations-today">
+              <mat-card-content>
+                <div class="stat-content">
+                  <div class="stat-icon">
+                    <mat-icon>trending_up</mat-icon>
+                  </div>
+                  <div class="stat-info">
+                    <h3 class="stat-number">{{ dashboardStats.totalOperationsToday }}</h3>
+                    <p class="stat-label">Operations Today</p>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+            
+          </div>
+          
+          <!-- Detailed Statistics -->
+          <div class="detailed-stats" *ngIf="dashboardStats">
+            
+            <mat-card class="detail-card">
+              <mat-card-header>
+                <mat-card-title>
+                  <mat-icon>analytics</mat-icon>
+                  Account Analytics
+                </mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="detail-grid">
+                  
+                  <div class="detail-item">
+                    <span class="detail-label">Active Accounts:</span>
+                    <span class="detail-value success">{{ dashboardStats.activeAccountsCount }}</span>
+                  </div>
+                  
+                  <div class="detail-item">
+                    <span class="detail-label">Suspended Accounts:</span>
+                    <span class="detail-value warning">{{ dashboardStats.suspendedAccountsCount }}</span>
+                  </div>
+                  
+                  <div class="detail-item">
+                    <span class="detail-label">Current Accounts:</span>
+                    <span class="detail-value">{{ dashboardStats.currentAccountsCount }}</span>
+                  </div>
+                  
+                  <div class="detail-item">
+                    <span class="detail-label">Saving Accounts:</span>
+                    <span class="detail-value">{{ dashboardStats.savingAccountsCount }}</span>
+                  </div>
+                  
+                  <div class="detail-item">
+                    <span class="detail-label">Average Balance:</span>
+                    <span class="detail-value">{{ formatCurrency(dashboardStats.averageAccountBalance) }}</span>
+                  </div>
+                  
+                  <div class="detail-item">
+                    <span class="detail-label">Highest Balance:</span>
+                    <span class="detail-value success">{{ formatCurrency(dashboardStats.highestAccountBalance) }}</span>
+                  </div>
+                  
+                </div>
+              </mat-card-content>
+            </mat-card>
+            
+            <mat-card class="detail-card">
+              <mat-card-header>
+                <mat-card-title>
+                  <mat-icon>history</mat-icon>
+                  Recent Activity
+                </mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="detail-grid">
+                  
+                  <div class="detail-item">
+                    <span class="detail-label">Operations This Week:</span>
+                    <span class="detail-value">{{ dashboardStats.totalOperationsThisWeek }}</span>
+                  </div>
+                  
+                  <div class="detail-item">
+                    <span class="detail-label">Operations This Month:</span>
+                    <span class="detail-value">{{ dashboardStats.totalOperationsThisMonth }}</span>
+                  </div>
+                  
+                  <div class="detail-item">
+                    <span class="detail-label">Recent Operations:</span>
+                    <span class="detail-value">{{ dashboardStats.recentOperationsCount }}</span>
+                  </div>
+                  
+                  <div class="detail-item">
+                    <span class="detail-label">Total Credits:</span>
+                    <span class="detail-value success">{{ formatCurrency(dashboardStats.totalCreditAmount) }}</span>
+                  </div>
+                  
+                  <div class="detail-item">
+                    <span class="detail-label">Total Debits:</span>
+                    <span class="detail-value warning">{{ formatCurrency(dashboardStats.totalDebitAmount) }}</span>
+                  </div>
+                  
+                  <div class="detail-item">
+                    <span class="detail-label">Avg Daily Volume:</span>
+                    <span class="detail-value">{{ formatCurrency(dashboardStats.averageDailyTransactionVolume) }}</span>
+                  </div>
+                  
+                </div>
+              </mat-card-content>
+            </mat-card>
+            
+          </div>
+          
+        </div>
+      </ng-template>
+    </mat-tab>
+    
+    <!-- Quick Actions Tab -->
+    <mat-tab label="Quick Actions">
+      <ng-template matTabContent>
+        <div class="tab-content">
+          
+          <mat-card class="actions-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>flash_on</mat-icon>
+                Quick Actions
+              </mat-card-title>
+              <mat-card-subtitle>
+                Access commonly used features quickly
+              </mat-card-subtitle>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <div class="actions-grid">
+                
+                <button mat-raised-button color="primary" routerLink="/customers/new" class="action-button">
+                  <mat-icon>person_add</mat-icon>
+                  <span>Add New Customer</span>
+                </button>
+                
+                <button mat-raised-button color="primary" routerLink="/accounts/new" class="action-button">
+                  <mat-icon>account_balance_wallet</mat-icon>
+                  <span>Create Account</span>
+                </button>
+                
+                <button mat-raised-button color="accent" routerLink="/operations/transfer" class="action-button">
+                  <mat-icon>swap_horiz</mat-icon>
+                  <span>Transfer Money</span>
+                </button>
+                
+                <button mat-raised-button color="accent" routerLink="/operations/credit" class="action-button">
+                  <mat-icon>add_circle</mat-icon>
+                  <span>Credit Account</span>
+                </button>
+                
+                <button mat-raised-button color="warn" routerLink="/operations/debit" class="action-button">
+                  <mat-icon>remove_circle</mat-icon>
+                  <span>Debit Account</span>
+                </button>
+                
+                <button mat-raised-button routerLink="/customers" class="action-button">
+                  <mat-icon>people</mat-icon>
+                  <span>View Customers</span>
+                </button>
+                
+                <button mat-raised-button routerLink="/accounts" class="action-button">
+                  <mat-icon>account_balance</mat-icon>
+                  <span>View Accounts</span>
+                </button>
+                
+                <button mat-raised-button routerLink="/operations" class="action-button">
+                  <mat-icon>receipt_long</mat-icon>
+                  <span>View Operations</span>
+                </button>
+                
+              </div>
+            </mat-card-content>
+          </mat-card>
+          
+        </div>
+      </ng-template>
+    </mat-tab>
+    
+  </mat-tab-group>
+  
+</div>
+
+<!-- Loading Template -->
+<ng-template #loadingTemplate>
+  <div class="loading-container">
+    <mat-card class="loading-card">
+      <mat-card-content>
+        <div class="loading-content">
+          <mat-spinner diameter="60"></mat-spinner>
+          <h3>Loading Profile...</h3>
+          <p>Please wait while we fetch your information</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</ng-template>

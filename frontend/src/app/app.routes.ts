@@ -110,12 +110,16 @@ export const routes: Routes = [
       }
     ]
   },
-  
-  // Profile routes
+    // Profile routes
   {
     path: 'profile',
     canActivate: [authGuard],
     children: [
+      {
+        path: '',
+        loadComponent: () => import('./components/profile/profile.component')
+          .then(m => m.ProfileComponent)
+      },
       {
         path: 'change-password',
         loadComponent: () => import('./components/auth/change-password/change-password.component')
