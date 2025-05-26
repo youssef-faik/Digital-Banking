@@ -125,30 +125,65 @@ export class CustomerListComponent implements OnInit {
 
   deleteCustomer(customer: Customer) {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '400px',
+      width: '400px', // Standard width for simple confirmation
       data: {
         title: 'Delete Customer',
-        message: `Are you sure you want to delete customer ${customer.name}?`,
+        message: `Are you sure you want to delete customer "${customer.name}"?`, // Simplified message
         confirmText: 'Delete',
-        cancelText: 'Cancel'
+        cancelText: 'Cancel',
+        confirmButtonColor: 'warn' // Standard color for delete confirmation
       }
     });
 
     dialogRef.afterClosed().subscribe(result => {
       if (result && customer.id) {
         this.customerService.deleteCustomer(customer.id).subscribe({
-          next: () => {            this.snackBar.open('Customer deleted successfully!', 'Close', {
+          next: () => {
+            this.snackBar.open('Customer deleted successfully!', 'Close', {
               duration: 3000,
               panelClass: 'success-snackbar'
             });
             this.loadCustomers(this.searchControl.value || ''); // Reload current page with search term
           },
           error: (error: any) => {
-            this.snackBar.open(
-              'Failed to delete customer. Please try again.',
-              'Close',
-              { duration: 5000, panelClass: 'error-snackbar' }
-            );
+            console.error('Error deleting customer:', error);
+            let errorMessage = 'Failed to delete customer. Please try again.';
+            let errorTitle = 'Deletion Failed';
+
+            if (error.status === 409) { // Customer has associated bank accounts
+              errorTitle = 'Unable to Delete Customer';
+              // Prioritize backend message, but provide a more specific fallback
+              errorMessage = error.error?.message || `Cannot delete customer "${customer.name}" (ID: ${customer.id}) as they may have associated bank accounts or other dependencies. Please check the customer\\'s details or contact support if the issue persists.`;
+              
+              // Open a new dialog for this specific alert
+              this.dialog.open(ConfirmDialogComponent, {
+                width: '450px',
+                data: {
+                  title: errorTitle,
+                  message: errorMessage,
+                  confirmText: 'OK',
+                  cancelText: null, // No cancel button for this alert dialog
+                  confirmButtonColor: 'primary' // Neutral color for OK
+                }
+              });
+            } else {
+              // For other errors, use the snackbar
+              if (error.status === 404) {
+                errorMessage = `Customer "${customer.name}" (ID: ${customer.id}) was not found. It may have already been deleted.`;
+              } else if (error.status === 403) {
+                errorMessage = `You do not have the necessary permissions to delete customer "${customer.name}" (ID: ${customer.id}). Please contact an administrator if you believe this is an error.`;
+              } else if (error.error?.message) {
+                errorMessage = error.error.message;
+              } else {
+                // Generic fallback for other unexpected errors
+                errorMessage = `An unexpected error occurred while trying to delete customer "${customer.name}" (ID: ${customer.id}). Please try again or contact support.`;
+              }
+              
+              this.snackBar.open(errorMessage, 'Close', {
+                duration: 7000,
+                panelClass: 'error-snackbar'
+              });
+            }
           }
         });
       }
@@ -167,11 +202,11 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
   template: `
     <h2 mat-dialog-title>{{data.title}}</h2>
     <div mat-dialog-content>
-      <p>{{data.message}}</p>
+      <p style="white-space: pre-line; line-height: 1.6;">{{data.message}}</p>
     </div>
     <div mat-dialog-actions align="end">
-      <button mat-button (click)="onCancel()">{{data.cancelText}}</button>
-      <button mat-raised-button color="warn" (click)="onConfirm()">{{data.confirmText}}</button>
+      <button mat-button (click)="onCancel()" *ngIf="data.cancelText">{{data.cancelText}}</button>
+      <button mat-raised-button [color]="data.confirmButtonColor || 'warn'" (click)="onConfirm()">{{data.confirmText}}</button>
     </div>
   `
 })

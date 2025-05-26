@@ -14,6 +14,7 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { Router, RouterModule } from '@angular/router';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog'; // Added MatDialogModule
 
 import { AccountService } from '../../../services/account.service';
 import { BankAccount } from '../../../models/bank.models';
@@ -34,7 +35,8 @@ import { BankAccount } from '../../../models/bank.models';
     MatSnackBarModule,
     MatPaginatorModule,
     RouterModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    MatDialogModule // Added MatDialogModule
   ],
   templateUrl: './account-list.component.html',
   styleUrl: './account-list.component.scss'
@@ -43,6 +45,7 @@ export class AccountListComponent implements OnInit {
   private accountService = inject(AccountService);
   private snackBar = inject(MatSnackBar);
   private router = inject(Router);
+  private dialog = inject(MatDialog); // Injected MatDialog
   accounts: BankAccount[] = [];
   displayedColumns: string[] = ['id', 'customer', 'type', 'balance', 'status', 'createdAt', 'actions'];
   isLoading = false;
@@ -173,25 +176,60 @@ export class AccountListComponent implements OnInit {
   }
 
   deleteAccount(account: BankAccount) {
-    if (confirm(`Are you sure you want to delete account ${account.id}? This action cannot be undone.`)) {
-      this.accountService.deleteAccount(account.id).subscribe({
-        next: () => {          this.snackBar.open(
-            'Account deleted successfully',
-            'Close',
-            { duration: 3000, panelClass: 'success-snackbar' }
-          );
-          this.loadAccounts(); // Reload current page// Refresh the list
-        },
-        error: (error) => {
-          console.error('Error deleting account:', error);
-          this.snackBar.open(
-            'Failed to delete account. Please try again.',
-            'Close',
-            { duration: 5000, panelClass: 'error-snackbar' }
-          );
-        }
-      });
-    }
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, { // Use ConfirmDialogComponent
+      width: '400px',
+      data: {
+        title: 'Delete Account',
+        message: `Are you sure you want to delete account "${account.id}"? This action cannot be undone.`,
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+        confirmButtonColor: 'warn'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && account.id) {
+        this.accountService.deleteAccount(account.id).subscribe({
+          next: () => {
+            this.snackBar.open(
+              'Account deleted successfully',
+              'Close',
+              { duration: 3000, panelClass: 'success-snackbar' }
+            );
+            this.loadAccounts(); // Reload current page
+          },
+          error: (error) => {
+            console.error('Error deleting account:', error);
+            let errorMessage = 'Failed to delete account. Please try again.';
+            let errorTitle = 'Deletion Failed';
+
+            if (error.status === 409) {
+              errorTitle = 'Unable to Delete Account';
+              errorMessage = error.error?.message || `Cannot delete account "${account.id}". It has existing operations. Please clear or reassign operations before deleting.`;
+              
+              this.dialog.open(ConfirmDialogComponent, {
+                width: '450px',
+                data: {
+                  title: errorTitle,
+                  message: errorMessage,
+                  confirmText: 'OK',
+                  cancelText: null,
+                  confirmButtonColor: 'primary'
+                }
+              });
+            } else if (error.status === 404) {
+              errorMessage = `Account "${account.id}" was not found. It may have already been deleted.`;
+              this.snackBar.open(errorMessage, 'Close', { duration: 7000, panelClass: 'error-snackbar' });
+            } else if (error.status === 403) {
+              errorMessage = `You do not have the necessary permissions to delete account "${account.id}". Please contact an administrator.`;
+              this.snackBar.open(errorMessage, 'Close', { duration: 7000, panelClass: 'error-snackbar' });
+            } else {
+              this.snackBar.open(errorMessage, 'Close', { duration: 5000, panelClass: 'error-snackbar' });
+            }
+          }
+        });
+      }
+    });
   }
 
   toggleAccountStatus(account: BankAccount) {
@@ -251,5 +289,43 @@ export class AccountListComponent implements OnInit {
       case 'SUSPENDED': return 'pause_circle';
       default: return 'help';
     }
+  }
+}
+
+// Confirm Dialog Component (inline for simplicity, ensure this or a shared one is available)
+// If ConfirmDialogComponent is not in this file, it needs to be imported.
+// For this example, I'll assume it's available or you'll add it/import it.
+// If it's the same as in CustomerListComponent, you might want to move it to a shared module.
+
+import { Component as DialogComponent, Inject } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+
+@DialogComponent({
+  selector: 'app-confirm-dialog',
+  standalone: true,
+  imports: [CommonModule, MatDialogModule, MatButtonModule],
+  template: `
+    <h2 mat-dialog-title>{{data.title}}</h2>
+    <div mat-dialog-content>
+      <p style="white-space: pre-line; line-height: 1.6;">{{data.message}}</p>
+    </div>
+    <div mat-dialog-actions align="end">
+      <button mat-button (click)="onCancel()" *ngIf="data.cancelText">{{data.cancelText}}</button>
+      <button mat-raised-button [color]="data.confirmButtonColor || 'warn'" (click)="onConfirm()">{{data.confirmText}}</button>
+    </div>
+  `
+})
+export class ConfirmDialogComponent {
+  constructor(
+    public dialogRef: MatDialogRef<ConfirmDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: any
+  ) {}
+
+  onConfirm(): void {
+    this.dialogRef.close(true);
+  }
+
+  onCancel(): void {
+    this.dialogRef.close(false);
   }
 }

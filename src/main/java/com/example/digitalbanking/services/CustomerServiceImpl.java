@@ -3,6 +3,7 @@ package com.example.digitalbanking.services;
 import com.example.digitalbanking.dtos.CustomerDTO;
 import com.example.digitalbanking.entities.AppUser;
 import com.example.digitalbanking.entities.Customer;
+import com.example.digitalbanking.exceptions.CustomerDeletionException;
 import com.example.digitalbanking.exceptions.CustomerNotFoundException;
 import com.example.digitalbanking.mappers.BankAccountMapper;
 import com.example.digitalbanking.repositories.AppUserRepository;
@@ -110,9 +111,9 @@ public class CustomerServiceImpl implements CustomerService {
                 .orElseThrow(() -> new CustomerNotFoundException("Customer Not found with ID: " + customerId));
         checkCustomerOwnership(customer, currentUser);
 
-        // Add check for existing bank accounts before deletion if necessary (as in BankAccountServiceImpl)
         if (customer.getBankAccounts() != null && !customer.getBankAccounts().isEmpty()) {
-            throw new RuntimeException("Cannot delete customer with ID: " + customerId + " because they have associated bank accounts.");
+            // Throw the specific exception
+            throw new CustomerDeletionException("Cannot delete customer with ID: " + customerId + " because they have associated bank accounts.");
         }
 
         customerRepository.delete(customer);
