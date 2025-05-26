@@ -1,117 +1,403 @@
-/* Optimized Global Styles */
+/* GitHub Light High Contrast Banking UI - Global Styles */
+
+// CSS Custom Properties for GitHub-inspired theming
+:root {
+  // GitHub Light High Contrast Color Palette
+  --color-primary: #0e1116;
+  --color-secondary: #ffffff;
+  --color-accent: #21262d;
+  --color-surface: #f6f8fa;
+  --color-background: #ffffff;
+  --color-border: #d0d7de;
+  --color-border-strong: #8c959f;
+  --color-shadow: rgba(31, 35, 40, 0.04);
+  --color-shadow-hover: rgba(31, 35, 40, 0.08);
+  --color-text-primary: #0e1116;
+  --color-text-secondary: #656d76;
+  --color-text-muted: #8c959f;  // GitHub Dark Accent Colors for Banking UI
+  --color-accent-dark: #0e1116;
+  --color-accent-dark-light: #21262d;
+  --color-accent-dark-hover: #30363d;
+  --color-accent-dark-50: rgba(14, 17, 22, 0.05);
+  --color-accent-dark-100: rgba(14, 17, 22, 0.1);
+  --color-accent-dark-200: rgba(14, 17, 22, 0.2);
+  --color-accent-dark-300: rgba(14, 17, 22, 0.3);
+  
+  // GitHub Blue for Interactive Elements
+  --color-accent-blue: #0969da;
+  --color-accent-blue-light: #218bff;
+  --color-accent-blue-dark: #0550ae;
+  --color-accent-blue-hover: #0860ca;
+  --color-accent-blue-50: rgba(9, 105, 218, 0.05);
+  --color-accent-blue-100: rgba(9, 105, 218, 0.1);
+  --color-accent-blue-200: rgba(9, 105, 218, 0.2);
+  --color-accent-blue-300: rgba(9, 105, 218, 0.3);
+    // GitHub Status Colors
+  --color-success: #1a7f37;
+  --color-success-light: #2da44e;
+  --color-warning: #bf8700;
+  --color-warning-light: #fb8500;
+  --color-error: #cf222e;
+  --color-error-light: #ff6b6b;
+  --color-info: var(--color-accent-blue);
+  
+  // GitHub Surface Colors
+  --color-canvas: #ffffff;
+  --color-canvas-subtle: #f6f8fa;
+  --color-canvas-inset: #f6f8fa;
+  --color-neutral: #afb8c1;
+  --color-neutral-muted: #d0d7de;
+  
+  // Spacing Scale
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  --spacing-3xl: 64px;
+  
+  // Border Radius
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+  
+  // Shadows
+  --shadow-sm: 0 1px 2px 0 var(--color-shadow);
+  --shadow-md: 0 4px 6px -1px var(--color-shadow);
+  --shadow-lg: 0 10px 15px -3px var(--color-shadow);
+  --shadow-xl: 0 20px 25px -5px var(--color-shadow);
+    // GitHub Typography
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+  --font-family-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+  --font-size-4xl: 2.25rem;
+  
+  // GitHub Font Weights
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  
+  // Line Heights
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+  
+  // Transitions
+  --transition-fast: 150ms ease-in-out;
+  --transition-normal: 250ms ease-in-out;
+  --transition-slow: 350ms ease-in-out;
+}
 
 html, body { 
   height: 100%; 
   margin: 0;
   padding: 0;
+  font-family: var(--font-family);
 }
 
 body { 
   margin: 0; 
-  font-family: 'Inter', 'Roboto', sans-serif;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  background-attachment: fixed;
-  color: #333;
-  line-height: 1.6;
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  line-height: var(--line-height-normal);
+  font-size: var(--font-size-base);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-// Optimized scrollbar
+// Modern Scrollbar
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
+  background: var(--color-surface);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
+  background: var(--color-border);
+  border-radius: var(--radius-sm);
   
   &:hover {
-    background: #a8a8a8;
+    background: var(--color-text-muted);
   }
 }
 
-// Simplified Material theme customizations
+// Modern Material Design Customizations
 .mat-mdc-card {
-  border-radius: 16px !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
+  border-radius: var(--radius-xl) !important;
+  box-shadow: var(--shadow-md) !important;
+  border: 1px solid var(--color-border) !important;
+  background: var(--color-background) !important;
+  color: var(--color-text-primary) !important;
 }
 
 .mat-mdc-button {
-  border-radius: 12px !important;
+  border-radius: var(--radius-lg) !important;
   font-weight: 500 !important;
   text-transform: none !important;
+  font-family: var(--font-family) !important;
+  transition: all var(--transition-normal) !important;
 }
 
 .mat-mdc-raised-button {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  box-shadow: var(--shadow-sm) !important;
+  
+  &:hover {
+    box-shadow: var(--shadow-md) !important;
+    transform: translateY(-1px);
+  }
+    &.mat-primary {
+    background-color: var(--color-primary) !important;
+    color: var(--color-secondary) !important;
+    
+    &:hover {
+      background-color: var(--color-accent) !important;
+    }
+  }
+  
+  &.mat-accent {
+    background-color: var(--color-accent-blue) !important;
+    color: var(--color-secondary) !important;
+    
+    &:hover {
+      background-color: var(--color-accent-blue-dark) !important;
+    }
+  }
 }
 
-// Essential utility classes only
-.gradient-text {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.mat-mdc-outlined-button {
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text-primary) !important;
+  
+  &:hover {
+    background-color: var(--color-surface) !important;
+    border-color: var(--color-text-secondary) !important;
+  }
+  
+  &.mat-accent {
+    color: var(--color-accent-blue) !important;
+    border-color: var(--color-accent-blue) !important;
+    
+    &:hover {
+      background-color: var(--color-accent-blue-50) !important;
+      border-color: var(--color-accent-blue-dark) !important;
+    }
+  }
 }
 
-.glass-effect {
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+.mat-mdc-form-field {
+  .mat-mdc-text-field-wrapper {
+    border-radius: var(--radius-lg) !important;
+  }
+  
+  .mat-mdc-form-field-label {
+    color: var(--color-text-secondary) !important;
+  }
 }
 
-// Material Icon fixes
-.material-icons {
-  font-family: 'Material Icons' !important;
-  font-weight: normal !important;
-  font-style: normal !important;
-  font-size: 24px !important;
-  line-height: 1 !important;
-  letter-spacing: normal !important;
-  text-transform: none !important;
-  display: inline-block !important;
-  white-space: nowrap !important;
-  word-wrap: normal !important;
-  direction: ltr !important;
-  -webkit-font-feature-settings: 'liga' !important;
-  font-feature-settings: 'liga' !important;
-  -webkit-font-smoothing: antialiased !important;
+// Modern Utility Classes
+.modern-card {
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-normal);
+  
+  &:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
+  
+  &.accent-border {
+    border-left: 4px solid var(--color-accent-blue);
+  }
+  
+  &.accent-hover:hover {
+    border-color: var(--color-accent-blue-100);
+  }
 }
 
+.modern-button {
+  background: var(--color-primary);
+  color: var(--color-secondary);
+  border: none;
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  font-family: var(--font-family);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  
+  &:hover {
+    background: var(--color-accent);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+  }
+  
+  &.secondary {
+    background: var(--color-secondary);
+    color: var(--color-primary);
+    border: 1px solid var(--color-border);
+    
+    &:hover {
+      background: var(--color-surface);
+    }
+  }
+  
+  &.accent {
+    background: var(--color-accent-blue);
+    color: var(--color-secondary);
+    
+    &:hover {
+      background: var(--color-accent-blue-dark);
+    }
+  }
+  
+  &.accent-outline {
+    background: transparent;
+    color: var(--color-accent-blue);
+    border: 1px solid var(--color-accent-blue);
+    
+    &:hover {
+      background: var(--color-accent-blue-50);
+      border-color: var(--color-accent-blue-dark);
+    }
+  }
+}
+
+.text-primary { color: var(--color-text-primary); }
+.text-secondary { color: var(--color-text-secondary); }
+.text-muted { color: var(--color-text-muted); }
+.text-accent { color: var(--color-accent-blue); }
+
+.bg-surface { background-color: var(--color-surface); }
+.bg-primary { background-color: var(--color-primary); }
+.bg-secondary { background-color: var(--color-secondary); }
+.bg-accent { background-color: var(--color-accent-blue); }
+
+.border-accent { border-color: var(--color-accent-blue); }
+.border-left-accent { border-left: 4px solid var(--color-accent-blue); }
+.border-top-accent { border-top: 4px solid var(--color-accent-blue); }
+
+// Modern Grid System
+.modern-grid {
+  display: grid;
+  gap: var(--spacing-lg);
+  
+  &.cols-1 { grid-template-columns: 1fr; }
+  &.cols-2 { grid-template-columns: repeat(2, 1fr); }
+  &.cols-3 { grid-template-columns: repeat(3, 1fr); }
+  &.cols-4 { grid-template-columns: repeat(4, 1fr); }
+  
+  @media (max-width: 768px) {
+    &.cols-2, &.cols-3, &.cols-4 {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+// Modern Flexbox Utilities
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.gap-sm { gap: var(--spacing-sm); }
+.gap-md { gap: var(--spacing-md); }
+.gap-lg { gap: var(--spacing-lg); }
+
+// Modern Link Styles
+a {
+  color: var(--color-accent-blue);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  
+  &:hover {
+    color: var(--color-accent-blue-hover);
+    text-decoration: underline;
+  }
+  
+  &:focus {
+    outline: 2px solid var(--color-accent-blue-100);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+}
+
+// Modern Focus States
+*:focus {
+  outline: 2px solid var(--color-accent-blue-100);
+  outline-offset: 2px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--color-accent-blue) !important;
+  box-shadow: 0 0 0 3px var(--color-accent-blue-100) !important;
+}
+
+// Modern Material Icons
 mat-icon {
   font-family: 'Material Icons' !important;
   font-weight: normal !important;
   font-style: normal !important;
   line-height: 1 !important;
-  letter-spacing: normal !important;
-  text-transform: none !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  white-space: nowrap !important;
-  word-wrap: normal !important;
-  direction: ltr !important;
-  -webkit-font-feature-settings: 'liga' !important;
-  font-feature-settings: 'liga' !important;
   -webkit-font-smoothing: antialiased !important;
+  color: inherit;
   
-  // Ensure icons are properly sized
   &:not([style*="font-size"]) {
     font-size: 24px !important;
     width: 24px !important;
     height: 24px !important;
   }
-  
-  // Fix for Angular Material icon sizing
-  &.mat-icon {
-    font-size: inherit !important;
-    width: auto !important;
-    height: auto !important;
+}
+
+// Modern Loading Animation
+@keyframes modernSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes accentPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 var(--color-accent-blue-200);
+  }
+  50% {
+    box-shadow: 0 0 0 10px var(--color-accent-blue-100);
+  }
+}
+
+@keyframes accentGlow {
+  0%, 100% { border-color: var(--color-accent-blue); }
+  50% { border-color: var(--color-accent-blue-light); }
+}
+
+.loading-spinner {
+  animation: modernSpin 1s linear infinite;
+}
+
+// Modern Responsive Breakpoints
+@media (max-width: 480px) {
+  :root {
+    --spacing-lg: 16px;
+    --spacing-xl: 24px;
+    --spacing-2xl: 32px;
   }
 }

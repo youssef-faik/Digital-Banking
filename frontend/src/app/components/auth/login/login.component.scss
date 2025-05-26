@@ -1,59 +1,97 @@
+// GitHub Light High Contrast Login Component
 .login-container {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px;
+  background: var(--color-canvas);
+  padding: var(--spacing-lg);
 }
 
 .login-card {
   max-width: 400px;
   width: 100%;
-  padding: 24px;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  padding: var(--spacing-2xl);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 24px rgba(31, 35, 40, 0.12);
+  background: var(--color-canvas-subtle);
+  border: 1px solid var(--color-border);
+  border-top: 4px solid var(--color-accent-dark);
+  transition: all var(--transition-fast);
+  
+  &:hover {
+    box-shadow: 0 12px 32px rgba(31, 35, 40, 0.16);
+    border-top-color: var(--color-accent-dark-hover);
+  }
 }
 
 .full-width {
   width: 100%;
-  margin-bottom: 16px;
+  margin-bottom: var(--spacing-md);
 }
 
 .button-container {
-  margin-top: 24px;
-  margin-bottom: 16px;
+  margin-top: var(--spacing-xl);
+  margin-bottom: var(--spacing-md);
 }
 
 .actions-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-sm);
   
   p {
     margin: 0;
-    color: rgba(0, 0, 0, 0.6);
-    font-size: 14px;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
   }
 }
 
 mat-card-header {
   text-align: center;
-  margin-bottom: 24px;
+  margin-bottom: var(--spacing-xl);
   
   mat-card-title {
-    font-size: 28px;
-    font-weight: 600;
-    color: #333;
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-sm);
   }
   
   mat-card-subtitle {
-    font-size: 16px;
-    color: rgba(0, 0, 0, 0.6);
+    font-size: var(--font-size-base);
+    color: var(--color-text-muted);
   }
 }
 
 mat-spinner {
-  margin-right: 8px;
+  margin-right: var(--spacing-sm);
+}
+
+// GitHub-style form field styling
+::ng-deep .mat-mdc-form-field {
+  .mat-mdc-text-field-wrapper {
+    border-radius: var(--radius-md);
+    
+    &:not(.mdc-text-field--disabled):hover .mdc-line-ripple::before {
+      border-bottom-color: var(--color-accent-dark);
+    }
+  }
+  
+  .mat-mdc-form-field-focus-overlay {
+    background-color: transparent;
+  }
+}
+
+// GitHub-style responsive design
+@media (max-width: 480px) {
+  .login-container {
+    padding: var(--spacing-md);
+  }
+  
+  .login-card {
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-md);
+  }
 }

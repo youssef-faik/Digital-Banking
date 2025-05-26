@@ -3,48 +3,54 @@
   justify-content: center;
   align-items: center;
   min-height: calc(100vh - 120px);
-  padding: 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: var(--spacing-lg);
+  background: var(--surface-light);
 
   .customer-form-card {
     width: 100%;
     max-width: 500px;
-    padding: 32px;
-    border-radius: 16px;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-    background: white;
+    padding: var(--spacing-xxl);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    background: var(--surface-white);
+    border: 1px solid var(--border-light);
 
     mat-card-header {
-      margin-bottom: 32px;
+      margin-bottom: var(--spacing-xxl);
       text-align: center;
+      background: var(--surface-black);
+      color: var(--text-on-dark);
+      padding: var(--spacing-lg);
+      border-radius: var(--radius-md);
+      margin: calc(-1 * var(--spacing-xxl)) calc(-1 * var(--spacing-xxl)) var(--spacing-xxl);
 
       mat-card-title {
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 12px;
+        gap: var(--spacing-sm);
         font-size: 26px;
-        font-weight: 600;
-        color: #333;
-        margin-bottom: 8px;
-
-        mat-icon {
+        font-weight: var(--font-weight-medium);
+        color: var(--text-on-dark);
+        margin-bottom: var(--spacing-xs);        mat-icon {
           font-size: 30px;
-          color: #1976d2;
+          color: var(--text-on-dark);
+          background: var(--color-accent-blue);
+          color: var(--surface-white);
+          padding: var(--spacing-xs);
+          border-radius: var(--radius-sm);
         }
       }
 
       mat-card-subtitle {
-        color: #666;
+        color: rgba(255, 255, 255, 0.8);
         font-size: 14px;
         line-height: 1.4;
       }
-    }
-
-    .customer-form {
+    }    .customer-form {
       display: flex;
       flex-direction: column;
-      gap: 24px;
+      gap: var(--spacing-lg);
 
       .full-width {
         width: 100%;
@@ -52,15 +58,15 @@
 
       mat-form-field {
         .mat-mdc-form-field-subscript-wrapper {
-          margin-top: 8px;
+          margin-top: var(--spacing-xs);
         }
 
         mat-icon[matSuffix] {
-          color: #666;
+          color: var(--text-secondary);
         }
 
         &:focus-within mat-icon[matSuffix] {
-          color: #1976d2;
+          color: var(--surface-black);
         }
       }
 
@@ -71,22 +77,21 @@
           opacity: 0.6;
         }
       }
-    }
-
-    .card-actions {
-      margin-top: 32px;
-      padding-top: 24px;
-      gap: 16px;
-      border-top: 1px solid #e0e0e0;
+    }    .card-actions {
+      margin-top: var(--spacing-xxl);
+      padding-top: var(--spacing-lg);
+      gap: var(--spacing-md);
+      border-top: 1px solid var(--border-light);
 
       button {
         min-width: 140px;
         height: 48px;
-        border-radius: 8px;
-        font-weight: 500;
+        border-radius: var(--radius-md);
+        font-weight: var(--font-weight-medium);
+        transition: var(--transition-smooth);
         
         mat-icon {
-          margin-right: 8px;
+          margin-right: var(--spacing-xs);
           font-size: 20px;
 
           &.spin {
@@ -95,18 +100,24 @@
         }
 
         &[mat-button] {
-          color: #666;
+          color: var(--text-secondary);
+          border: 1px solid var(--border-medium);
 
           &:hover {
-            background-color: #f5f5f5;
+            background-color: var(--surface-light);
+            border-color: var(--surface-black);
+            color: var(--text-primary);
           }
         }
 
         &[mat-raised-button] {
-          box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3);
+          background: var(--surface-black);
+          color: var(--text-on-dark);
+          box-shadow: var(--shadow-sm);
 
           &:hover {
-            box-shadow: 0 4px 12px rgba(25, 118, 210, 0.4);
+            background: var(--text-primary);
+            box-shadow: var(--shadow-md);
             transform: translateY(-1px);
           }
 
@@ -136,14 +147,15 @@
 
 @media (max-width: 600px) {
   .customer-form-container {
-    padding: 16px;
+    padding: var(--spacing-md);
     
     .customer-form-card {
-      padding: 24px;
+      padding: var(--spacing-lg);
       max-width: none;
       
       mat-card-header {
-        margin-bottom: 24px;
+        margin-bottom: var(--spacing-lg);
+        margin: calc(-1 * var(--spacing-lg)) calc(-1 * var(--spacing-lg)) var(--spacing-lg);
         
         mat-card-title {
           font-size: 22px;
@@ -159,16 +171,16 @@
       }
       
       .customer-form {
-        gap: 20px;
+        gap: var(--spacing-lg);
       }
       
       .card-actions {
-        margin-top: 24px;
+        margin-top: var(--spacing-lg);
         flex-direction: column;
         
         button {
           width: 100%;
-          margin: 4px 0;
+          margin: var(--spacing-xs) 0;
           order: 2;
           
           &[mat-raised-button] {
@@ -182,18 +194,19 @@
 
 @media (max-width: 480px) {
   .customer-form-container {
-    padding: 12px;
+    padding: var(--spacing-sm);
     
     .customer-form-card {
-      padding: 20px;
+      padding: var(--spacing-lg);
       
       mat-card-header {
-        margin-bottom: 20px;
+        margin-bottom: var(--spacing-lg);
+        margin: calc(-1 * var(--spacing-lg)) calc(-1 * var(--spacing-lg)) var(--spacing-lg);
         
         mat-card-title {
           font-size: 20px;
           flex-direction: column;
-          gap: 8px;
+          gap: var(--spacing-xs);
           
           mat-icon {
             font-size: 24px;
@@ -202,7 +215,7 @@
       }
       
       .customer-form {
-        gap: 16px;
+        gap: var(--spacing-md);
       }
     }
   }

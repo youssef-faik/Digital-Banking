@@ -3,40 +3,37 @@
   justify-content: center;
   align-items: center;
   min-height: calc(100vh - 120px);
-  padding: 24px;
-  background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+  padding: var(--spacing-lg);
+  background: var(--surface-gray-50);
 
   .credit-card {
     width: 100%;
     max-width: 500px;
-    padding: 32px;
-    border-radius: 16px;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-    background: white;
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    background: var(--surface-white);
+    border: 1px solid var(--border-light);
 
     mat-card-header {
-      margin-bottom: 32px;
+      margin-bottom: var(--spacing-xl);
       text-align: center;
 
       mat-card-title {
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 12px;
-        font-size: 26px;
-        font-weight: 600;
-        color: #333;
-        margin-bottom: 8px;
-
-        mat-icon {
+        gap: var(--spacing-sm);
+        font-size: var(--font-size-xl);
+        font-weight: var(--font-weight-semibold);
+        color: var(--text-primary);
+        margin-bottom: var(--spacing-sm);        mat-icon {
           font-size: 30px;
-          color: #00b894;
+          color: var(--color-accent-blue);
         }
-      }
-
-      mat-card-subtitle {
-        color: #666;
-        font-size: 14px;
+      }      mat-card-subtitle {
+        color: var(--text-secondary);
+        font-size: var(--font-size-sm);
         line-height: 1.4;
       }
     }
@@ -44,7 +41,7 @@
     .credit-form {
       display: flex;
       flex-direction: column;
-      gap: 24px;
+      gap: var(--spacing-lg);
 
       .full-width {
         width: 100%;
@@ -52,11 +49,11 @@
 
       mat-form-field {
         mat-icon[matSuffix] {
-          color: #666;
+          color: var(--text-secondary);
         }
 
         &:focus-within mat-icon[matSuffix] {
-          color: #00b894;
+          color: var(--surface-black);
         }
 
         textarea {
@@ -66,7 +63,7 @@
       }
 
       input, textarea {
-        font-size: 16px;
+        font-size: var(--font-size-base);
         
         &:disabled {
           opacity: 0.6;
@@ -75,19 +72,18 @@
     }
 
     .card-actions {
-      margin-top: 32px;
-      padding-top: 24px;
-      gap: 16px;
-      border-top: 1px solid #e0e0e0;
+      margin-top: var(--spacing-xl);
+      padding-top: var(--spacing-lg);
+      gap: var(--spacing-md);
+      border-top: 1px solid var(--border-light);
 
       button {
         min-width: 140px;
-        height: 48px;
-        border-radius: 8px;
-        font-weight: 500;
+        height: 48px;        border-radius: var(--radius-sm);
+        font-weight: var(--font-weight-medium);
         
         mat-icon {
-          margin-right: 8px;
+          margin-right: var(--spacing-sm);
           font-size: 20px;
 
           &[class*="refresh"] {
@@ -96,18 +92,24 @@
         }
 
         &[mat-button] {
-          color: #666;
+          color: var(--text-secondary);
+          border: 1px solid var(--border-light);
 
           &:hover {
-            background-color: #f5f5f5;
+            background: var(--surface-gray-50);
+            border-color: var(--surface-black);
           }
         }
 
         &[mat-raised-button] {
-          box-shadow: 0 2px 8px rgba(0, 184, 148, 0.3);
+          background: var(--surface-black);
+          color: var(--text-white);
+          border: 1px solid var(--surface-black);
+          box-shadow: var(--shadow-sm);
 
           &:hover {
-            box-shadow: 0 4px 12px rgba(0, 184, 148, 0.4);
+            background: var(--surface-gray-800);
+            box-shadow: var(--shadow-md);
             transform: translateY(-1px);
           }
 
@@ -115,6 +117,7 @@
             opacity: 0.6;
             transform: none;
             box-shadow: none;
+            background: var(--surface-gray-400);
           }
         }
       }
@@ -129,17 +132,17 @@
 
 @media (max-width: 600px) {
   .credit-container {
-    padding: 16px;
+    padding: var(--spacing-md);
     
     .credit-card {
-      padding: 24px;
+      padding: var(--spacing-lg);
       max-width: none;
       
       mat-card-header {
-        margin-bottom: 24px;
+        margin-bottom: var(--spacing-lg);
         
         mat-card-title {
-          font-size: 22px;
+          font-size: var(--font-size-lg);
           
           mat-icon {
             font-size: 26px;
@@ -148,11 +151,11 @@
       }
       
       .credit-form {
-        gap: 20px;
+        gap: var(--spacing-lg);
       }
       
       .card-actions {
-        margin-top: 24px;
+        margin-top: var(--spacing-lg);
         flex-direction: column;
         
         button {
