@@ -69,8 +69,17 @@ public class BankAccountServiceImpl implements BankAccountService {
             throw new AccessDeniedException("You do not have permission to access or modify resources for this customer.");
         }
     }
-    
-    private void checkBankAccountOwnership(BankAccount bankAccount, AppUser appUser) {
+      private void checkBankAccountOwnership(BankAccount bankAccount, AppUser appUser) {
+        // Allow ADMIN users to access any account
+        boolean isAdmin = appUser.getRoles().stream()
+                .anyMatch(role -> "ADMIN".equals(role.getRoleName()));
+        
+        if (isAdmin) {
+            log.info("Admin user {} accessing bank account {}", appUser.getUsername(), bankAccount.getId());
+            return;
+        }
+        
+        // For non-admin users, check ownership
         if (bankAccount.getCustomer() == null || bankAccount.getCustomer().getAppUser() == null || 
             !bankAccount.getCustomer().getAppUser().getUserId().equals(appUser.getUserId())) {
             log.warn("User {} attempted to access or modify bank account {} owned by a different user or with no owner.", appUser.getUsername(), bankAccount.getId());
@@ -365,10 +374,13 @@ public class BankAccountServiceImpl implements BankAccountService {
         Instant monthStart = Instant.now().minus(30, ChronoUnit.DAYS);
         long totalOperationsThisMonth = accountOperationRepository
             .countByAppUserAndOperationDateAfter(currentUser, monthStart);
-        
-        // All accounts are active for now (no suspended status implemented)
-        long activeAccountsCount = totalAccounts;
-        long suspendedAccountsCount = 0;
+          // Count active and suspended accounts
+        long activeAccountsCount = userAccounts.stream()
+            .filter(account -> account.getStatus() == AccountStatus.ACTIVE)
+            .count();
+        long suspendedAccountsCount = userAccounts.stream()
+            .filter(account -> account.getStatus() == AccountStatus.SUSPENDED)
+            .count();
         
         // Recent operations (last 24 hours)
         Instant yesterday = Instant.now().minus(1, ChronoUnit.DAYS);
@@ -577,5 +589,103 @@ public class BankAccountServiceImpl implements BankAccountService {
                 transactionFees,
                 averageTransactionSize
         );
+    }    @Override
+    public BankAccountDTO updateBankAccount(String accountId, BankAccountUpdateDTO updateDTO) {
+        log.info("Updating bank account with ID: {}", accountId);
+        AppUser currentUser = getCurrentAuthenticatedAppUser();
+        BankAccount bankAccount = bankAccountRepository.findById(accountId)
+                .orElseThrow(() -> new BankAccountNotFoundException("BankAccount not found"));
+        checkBankAccountOwnership(bankAccount, currentUser);
+
+        // Update common fields
+        if (updateDTO.getBalance() != null) {
+            bankAccount.setBalance(updateDTO.getBalance());
+        }
+        
+        // Update status if provided
+        if (updateDTO.getStatus() != null) {
+            try {
+                AccountStatus accountStatus = AccountStatus.valueOf(updateDTO.getStatus().toUpperCase());
+                bankAccount.setStatus(accountStatus);
+            } catch (IllegalArgumentException e) {
+                throw new RuntimeException("Invalid status value: " + updateDTO.getStatus() + ". Must be ACTIVE or SUSPENDED");
+            }
+        }
+
+        // Update type-specific fields
+        if (bankAccount instanceof CurrentAccount currentAccount) {
+            if (updateDTO.getOverdraft() != null) {
+                currentAccount.setOverdraft(updateDTO.getOverdraft());
+            }
+            BankAccount updatedAccount = bankAccountRepository.save(currentAccount);
+            return dtoMapper.fromCurrentAccount((CurrentAccount) updatedAccount);
+        } else if (bankAccount instanceof SavingAccount savingAccount) {
+            if (updateDTO.getInterestRate() != null) {
+                savingAccount.setInterestRate(updateDTO.getInterestRate());
+            }
+            BankAccount updatedAccount = bankAccountRepository.save(savingAccount);
+            return dtoMapper.fromSavingAccount((SavingAccount) updatedAccount);
+        }
+        
+        throw new BankAccountNotFoundException("Unknown BankAccount type for ID: " + accountId);
+    }
+
+    @Override
+    public void deleteBankAccount(String accountId) {
+        log.info("Deleting bank account with ID: {}", accountId);
+        AppUser currentUser = getCurrentAuthenticatedAppUser();
+        BankAccount bankAccount = bankAccountRepository.findById(accountId)
+                .orElseThrow(() -> new BankAccountNotFoundException("BankAccount not found"));
+        checkBankAccountOwnership(bankAccount, currentUser);
+
+        // Check if account has operations
+        if (bankAccount.getAccountOperations() != null && !bankAccount.getAccountOperations().isEmpty()) {
+            throw new RuntimeException("Cannot delete account with existing operations. Account ID: " + accountId);
+        }
+
+        bankAccountRepository.delete(bankAccount);
+        log.info("Bank account deleted successfully: {}", accountId);
+    }    @Override
+    public BankAccountDTO toggleAccountStatus(String accountId, String status) {
+        log.info("Toggling account status for ID: {} to {}", accountId, status);
+        AppUser currentUser = getCurrentAuthenticatedAppUser();
+        BankAccount bankAccount = bankAccountRepository.findById(accountId)
+                .orElseThrow(() -> new BankAccountNotFoundException("BankAccount not found"));
+        checkBankAccountOwnership(bankAccount, currentUser);
+
+        // Validate and set status
+        try {
+            AccountStatus accountStatus = AccountStatus.valueOf(status.toUpperCase());
+            bankAccount.setStatus(accountStatus);
+            BankAccount updatedAccount = bankAccountRepository.save(bankAccount);
+            
+            if (updatedAccount instanceof SavingAccount savingAccount) {
+                return dtoMapper.fromSavingAccount(savingAccount);
+            } else if (updatedAccount instanceof CurrentAccount currentAccount) {
+                return dtoMapper.fromCurrentAccount(currentAccount);
+            }
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Invalid status value: " + status + ". Must be ACTIVE or SUSPENDED");
+        }
+        
+        throw new BankAccountNotFoundException("Unknown BankAccount type for ID: " + accountId);
+    }
+
+    @Override
+    public Page<AccountOperationDTO> getAllUserOperations(int page, int size) {
+        log.info("Getting all operations for current user with page: {}, size: {}", page, size);
+        
+        AppUser currentUser = getCurrentUser();
+        List<BankAccount> userAccounts = bankAccountRepository.findAllByCustomerAppUser(currentUser);
+        List<String> accountIds = userAccounts.stream().map(BankAccount::getId).collect(Collectors.toList());
+        
+        if (accountIds.isEmpty()) {
+            return Page.empty();
+        }
+        
+        Pageable pageable = PageRequest.of(page, size);
+        Page<AccountOperation> operations = accountOperationRepository.findByBankAccountIdInOrderByOperationDateDesc(accountIds, pageable);
+        
+        return operations.map(dtoMapper::fromAccountOperation);
     }
 }

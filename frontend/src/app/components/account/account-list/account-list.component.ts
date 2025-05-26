@@ -42,19 +42,18 @@ export class AccountListComponent implements OnInit {
   private accountService = inject(AccountService);
   private snackBar = inject(MatSnackBar);
   private router = inject(Router);
-
   accounts: BankAccount[] = [];
-  displayedColumns: string[] = ['id', 'customer', 'type', 'balance', 'createdAt', 'actions'];
+  displayedColumns: string[] = ['id', 'customer', 'type', 'balance', 'status', 'createdAt', 'actions'];
   isLoading = false;
   searchControl = new FormControl('');
   typeFilter = new FormControl('');
+  statusFilter = new FormControl('');
   filteredAccounts: BankAccount[] = [];
 
   ngOnInit() {
     this.loadAccounts();
     this.setupFilters();
   }
-
   setupFilters() {
     this.searchControl.valueChanges
       .pipe(
@@ -64,6 +63,7 @@ export class AccountListComponent implements OnInit {
       .subscribe(() => this.applyFilters());
 
     this.typeFilter.valueChanges.subscribe(() => this.applyFilters());
+    this.statusFilter.valueChanges.subscribe(() => this.applyFilters());
   }
 
   loadAccounts() {
@@ -84,7 +84,6 @@ export class AccountListComponent implements OnInit {
       }
     });
   }
-
   applyFilters() {
     let filtered = this.accounts;
 
@@ -93,8 +92,11 @@ export class AccountListComponent implements OnInit {
     if (searchTerm) {
       filtered = filtered.filter(account =>
         account.id.toLowerCase().includes(searchTerm) ||
-        account.customer.name.toLowerCase().includes(searchTerm) ||
-        account.customer.email.toLowerCase().includes(searchTerm)
+        // Use safe navigation for customer name and email
+        account.customer?.name?.toLowerCase().includes(searchTerm) ||
+        account.customer?.email?.toLowerCase().includes(searchTerm) ||
+        (account.status && account.status.toLowerCase().includes(searchTerm)) ||
+        (account.type && account.type.toLowerCase().includes(searchTerm))
       );
     }
 
@@ -102,6 +104,12 @@ export class AccountListComponent implements OnInit {
     const typeFilter = this.typeFilter.value;
     if (typeFilter) {
       filtered = filtered.filter(account => account.type === typeFilter);
+    }
+
+    // Apply status filter
+    const statusFilter = this.statusFilter.value;
+    if (statusFilter) {
+      filtered = filtered.filter(account => account.status === statusFilter);
     }
 
     this.filteredAccounts = filtered;
@@ -114,9 +122,57 @@ export class AccountListComponent implements OnInit {
   viewAccount(account: BankAccount) {
     this.router.navigate(['/accounts', account.id]);
   }
-
   editAccount(account: BankAccount) {
     this.router.navigate(['/accounts/edit', account.id]);
+  }
+
+  deleteAccount(account: BankAccount) {
+    if (confirm(`Are you sure you want to delete account ${account.id}? This action cannot be undone.`)) {
+      this.accountService.deleteAccount(account.id).subscribe({
+        next: () => {
+          this.snackBar.open(
+            'Account deleted successfully',
+            'Close',
+            { duration: 3000, panelClass: 'success-snackbar' }
+          );
+          this.loadAccounts(); // Refresh the list
+        },
+        error: (error) => {
+          console.error('Error deleting account:', error);
+          this.snackBar.open(
+            'Failed to delete account. Please try again.',
+            'Close',
+            { duration: 5000, panelClass: 'error-snackbar' }
+          );
+        }
+      });
+    }
+  }
+
+  toggleAccountStatus(account: BankAccount) {
+    const newStatus = account.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
+    const action = newStatus === 'ACTIVE' ? 'activate' : 'suspend';
+    
+    if (confirm(`Are you sure you want to ${action} account ${account.id}?`)) {
+      this.accountService.toggleAccountStatus(account.id, newStatus).subscribe({
+        next: () => {
+          this.snackBar.open(
+            `Account ${action}d successfully`,
+            'Close',
+            { duration: 3000, panelClass: 'success-snackbar' }
+          );
+          this.loadAccounts(); // Refresh the list
+        },
+        error: (error) => {
+          console.error('Error updating account status:', error);
+          this.snackBar.open(
+            `Failed to ${action} account. Please try again.`,
+            'Close',
+            { duration: 5000, panelClass: 'error-snackbar' }
+          );
+        }
+      });
+    }
   }
 
   formatBalance(balance: number): string {
@@ -133,8 +189,23 @@ export class AccountListComponent implements OnInit {
       day: 'numeric'
     });
   }
-
   getAccountTypeColor(type: string): string {
     return type === 'CURRENT' ? 'primary' : 'accent';
+  }
+
+  getStatusColor(status: string): string {
+    switch (status) {
+      case 'ACTIVE': return 'primary';
+      case 'SUSPENDED': return 'warn';
+      default: return 'accent';
+    }
+  }
+
+  getStatusIcon(status: string): string {
+    switch (status) {
+      case 'ACTIVE': return 'check_circle';
+      case 'SUSPENDED': return 'pause_circle';
+      default: return 'help';
+    }
   }
 }

@@ -22,10 +22,19 @@
         <button mat-stroked-button (click)="refreshData()" class="refresh-btn">
           <mat-icon>refresh</mat-icon>
           Refresh
-        </button>
-        <button mat-raised-button color="primary" (click)="editAccount()">
+        </button>        <button mat-raised-button color="primary" (click)="editAccount()">
           <mat-icon>edit</mat-icon>
           Edit Account
+        </button>
+        <button mat-stroked-button 
+                [color]="account.status === 'ACTIVE' ? 'warn' : 'primary'"
+                (click)="toggleAccountStatus()">
+          <mat-icon>{{account.status === 'ACTIVE' ? 'pause_circle' : 'play_circle'}}</mat-icon>
+          {{ account.status === 'ACTIVE' ? 'Suspend' : 'Activate' }}
+        </button>
+        <button mat-stroked-button color="warn" (click)="deleteAccount()">
+          <mat-icon>delete</mat-icon>
+          Delete Account
         </button>
       </div>
     </div>
@@ -54,11 +63,11 @@
           <div class="info-row">
             <span class="label">Created Date:</span>
             <span class="value">{{ formatDate(account.createdAt) }}</span>
-          </div>
-          <div class="info-row">
+          </div>          <div class="info-row">
             <span class="label">Status:</span>
-            <mat-chip [color]="account.status === 'ACTIVE' ? 'primary' : 'warn'" selected>
-              {{ account.status }}
+            <mat-chip [color]="getStatusColor(account.status || 'ACTIVE')" selected>
+              <mat-icon>{{getStatusIcon(account.status || 'ACTIVE')}}</mat-icon>
+              {{ account.status || 'ACTIVE' }}
             </mat-chip>
           </div>
         </mat-card-content>
@@ -72,15 +81,15 @@
         </mat-card-header>
         <mat-card-content>          <div class="info-row">
             <span class="label">Name:</span>
-            <span class="value">{{ account.customer.name }}</span>
+            <span class="value">{{ account.customer?.name }}</span>
           </div>
           <div class="info-row">
             <span class="label">Email:</span>
-            <span class="value">{{ account.customer.email }}</span>
+            <span class="value">{{ account.customer?.email }}</span>
           </div>
           <div class="info-row">
             <span class="label">Customer ID:</span>
-            <span class="value">{{ account.customer.id }}</span>
+            <span class="value">{{ account.customer?.id }}</span>
           </div>
         </mat-card-content>
       </mat-card>
@@ -91,15 +100,14 @@
           <mat-icon mat-card-avatar>credit_card</mat-icon>
           <mat-card-title>Current Account Details</mat-card-title>
         </mat-card-header>
-        <mat-card-content>
-          <div class="info-row">
+        <mat-card-content>          <div class="info-row">
             <span class="label">Overdraft Limit:</span>
-            <span class="value">{{ formatCurrency(getCurrentAccount()?.overDraft || 0) }}</span>
+            <span class="value">{{ formatCurrency(getCurrentAccount()?.overdraft || 0) }}</span>
           </div>
           <div class="info-row">
             <span class="label">Available Credit:</span>
             <span class="value available-credit">
-              {{ formatCurrency((getCurrentAccount()?.overDraft || 0) + account.balance) }}
+              {{ formatCurrency((getCurrentAccount()?.overdraft || 0) + account.balance) }}
             </span>
           </div>
         </mat-card-content>

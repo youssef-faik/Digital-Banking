@@ -23,6 +23,9 @@ public abstract class BankAccount {
     private Instant createdAt;
     @ManyToOne(fetch = FetchType.LAZY)
     private Customer customer;
+    
+    @Enumerated(EnumType.STRING)
+    private AccountStatus status = AccountStatus.ACTIVE; // Default to ACTIVE
 
     @OneToMany(mappedBy = "bankAccount", fetch = FetchType.LAZY)
     private List<AccountOperation> accountOperations;

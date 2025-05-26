@@ -8,18 +8,41 @@ export interface BankAccount {
   id: string;
   balance: number;
   createdAt: string;
-  customer: Customer;
-  type: 'CURRENT' | 'SAVING';
-  status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
-  accountType?: 'CURRENT_ACCOUNT' | 'SAVING_ACCOUNT'; // For backward compatibility
+  status: AccountStatus;
+  type: 'CURRENT' | 'SAVING' | null; // Allow null if backend can send it
+  customer: Customer | null; // Expect a mapped Customer object, can be null
+  overdraft?: number;
+  interestRate?: number;
 }
 
 export interface CurrentAccount extends BankAccount {
+  type: 'CURRENT';
   overdraft: number;
 }
 
 export interface SavingAccount extends BankAccount {
+  type: 'SAVING';
   interestRate: number;
+}
+
+// DTO for Customer (matching backend)
+export interface CustomerDTO {
+  id: number;
+  name: string;
+  email: string;
+}
+
+// DTO for BankAccount (matching backend)
+export interface BankAccountDTO {
+  id: string;
+  balance: number;
+  createdAt: string;
+  status: AccountStatus | null;
+  type: 'CURRENT' | 'SAVING' | null;
+  customer: CustomerDTO; // Matches backend field name
+  overdraft?: number;
+  interestRate?: number;
+  // Backend might have other fields like 'className' if it's sending polymorphic types directly
 }
 
 export interface AccountOperation {
@@ -71,4 +94,33 @@ export interface DataPoint {
 export interface DashboardChartData {
   operationsTrend: DataPoint[];
   accountTypeDistribution: DataPoint[];
+}
+
+export enum AccountStatus {
+  ACTIVE = 'ACTIVE',
+  SUSPENDED = 'SUSPENDED'
+}
+
+// Generic Page interface for paginated responses
+export interface Page<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+  numberOfElements: number;
+  empty: boolean;
+}
+
+// DTO for AccountOperation (matching backend)
+export interface AccountOperationDTO {
+  id: number;
+  operationDate: string;
+  amount: number;
+  type: 'DEBIT' | 'CREDIT';
+  description: string;
+  bankAccountId: string;
+  performedByUsername: string;
 }

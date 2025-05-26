@@ -1,5 +1,6 @@
 package com.example.digitalbanking.dtos;
 
+import com.example.digitalbanking.entities.AccountStatus;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -11,5 +12,11 @@ public class BankAccountDTO {
     private String id;
     private BigDecimal balance;
     private Instant createdAt;
-    private CustomerDTO customerDTO; // Embed Customer DTO
+    private AccountStatus status;
+    private CustomerDTO customer; // Embed Customer DTO
+    
+    // Optional fields for specific account types
+    // These will be populated in subclasses and included in JSON serialization
+    private BigDecimal overdraft; // For CurrentAccount
+    private BigDecimal interestRate; // For SavingAccount
 }

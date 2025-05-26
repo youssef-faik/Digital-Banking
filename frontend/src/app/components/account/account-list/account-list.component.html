@@ -14,14 +14,21 @@
           <mat-label>Search accounts</mat-label>
           <input matInput [formControl]="searchControl" placeholder="Search by account ID, customer name or email">
           <mat-icon matSuffix>search</mat-icon>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="type-filter">
+        </mat-form-field>        <mat-form-field appearance="outline" class="type-filter">
           <mat-label>Account Type</mat-label>
           <mat-select [formControl]="typeFilter">
             <mat-option value="">All Types</mat-option>
             <mat-option value="CURRENT">Current Account</mat-option>
             <mat-option value="SAVING">Saving Account</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="status-filter">
+          <mat-label>Status</mat-label>
+          <mat-select [formControl]="statusFilter">
+            <mat-option value="">All Status</mat-option>
+            <mat-option value="ACTIVE">Active</mat-option>
+            <mat-option value="SUSPENDED">Suspended</mat-option>
           </mat-select>
         </mat-form-field>
         
@@ -44,15 +51,13 @@
             <td mat-cell *matCellDef="let account">
               <code class="account-id">{{account.id}}</code>
             </td>
-          </ng-container>
-
-          <!-- Customer Column -->
+          </ng-container>          <!-- Customer Column -->
           <ng-container matColumnDef="customer">
             <th mat-header-cell *matHeaderCellDef>Customer</th>
             <td mat-cell *matCellDef="let account">
               <div class="customer-info">
-                <div class="customer-name">{{account.customer.name}}</div>
-                <div class="customer-email">{{account.customer.email}}</div>
+                <div class="customer-name">{{account.customer?.name || 'N/A'}}</div>
+                <div class="customer-email">{{account.customer?.email || 'N/A'}}</div>
               </div>
             </td>
           </ng-container>
@@ -65,9 +70,7 @@
                 {{account.type === 'CURRENT' ? 'Current' : 'Saving'}}
               </mat-chip>
             </td>
-          </ng-container>
-
-          <!-- Balance Column -->
+          </ng-container>          <!-- Balance Column -->
           <ng-container matColumnDef="balance">
             <th mat-header-cell *matHeaderCellDef>Balance</th>
             <td mat-cell *matCellDef="let account">
@@ -77,15 +80,24 @@
             </td>
           </ng-container>
 
+          <!-- Status Column -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let account">
+              <mat-chip [color]="getStatusColor(account.status || 'ACTIVE')" selected>
+                <mat-icon>{{getStatusIcon(account.status || 'ACTIVE')}}</mat-icon>
+                {{account.status || 'ACTIVE'}}
+              </mat-chip>
+            </td>
+          </ng-container>
+
           <!-- Created Date Column -->
           <ng-container matColumnDef="createdAt">
             <th mat-header-cell *matHeaderCellDef>Created</th>
             <td mat-cell *matCellDef="let account">
               {{formatDate(account.createdAt)}}
             </td>
-          </ng-container>
-
-          <!-- Actions Column -->
+          </ng-container>          <!-- Actions Column -->
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef>Actions</th>
             <td mat-cell *matCellDef="let account">
@@ -104,6 +116,20 @@
                   matTooltip="Edit account">
                   <mat-icon>edit</mat-icon>
                 </button>
+                <button 
+                  mat-icon-button 
+                  [color]="account.status === 'ACTIVE' ? 'warn' : 'primary'"
+                  (click)="toggleAccountStatus(account)"
+                  [matTooltip]="account.status === 'ACTIVE' ? 'Suspend account' : 'Activate account'">
+                  <mat-icon>{{account.status === 'ACTIVE' ? 'pause_circle' : 'play_circle'}}</mat-icon>
+                </button>
+                <button 
+                  mat-icon-button 
+                  color="warn" 
+                  (click)="deleteAccount(account)"
+                  matTooltip="Delete account">
+                  <mat-icon>delete</mat-icon>
+                </button>
               </div>
             </td>
           </ng-container>
@@ -116,15 +142,13 @@
         <div *ngIf="isLoading" class="loading-container">
           <mat-icon class="loading-icon">refresh</mat-icon>
           <p>Loading accounts...</p>
-        </div>
-
-        <!-- Empty State -->
+        </div>        <!-- Empty State -->
         <div *ngIf="!isLoading && filteredAccounts.length === 0" class="empty-container">
           <mat-icon class="empty-icon">account_balance_wallet</mat-icon>
           <h3>No accounts found</h3>
-          <p *ngIf="searchControl.value || typeFilter.value">No accounts match your search criteria.</p>
-          <p *ngIf="!searchControl.value && !typeFilter.value">No bank accounts have been created yet.</p>
-          <button mat-raised-button color="primary" (click)="addAccount()" *ngIf="!searchControl.value && !typeFilter.value">
+          <p *ngIf="searchControl.value || typeFilter.value || statusFilter.value">No accounts match your search criteria.</p>
+          <p *ngIf="!searchControl.value && !typeFilter.value && !statusFilter.value">No bank accounts have been created yet.</p>
+          <button mat-raised-button color="primary" (click)="addAccount()" *ngIf="!searchControl.value && !typeFilter.value && !statusFilter.value">
             <mat-icon>add</mat-icon>
             Create First Account
           </button>

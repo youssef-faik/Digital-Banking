@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 
 // Angular Material imports
 import { MatCardModule } from '@angular/material/card';
@@ -14,7 +14,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { AccountService } from '../../../services/account.service';
 import { CustomerService } from '../../../services/customer.service';
-import { Customer, CreateAccountRequest } from '../../../models/bank.models';
+import { Customer, CreateAccountRequest, BankAccount, CurrentAccount, SavingAccount } from '../../../models/bank.models';
 
 @Component({
   selector: 'app-account-form',
@@ -39,6 +39,8 @@ export class AccountFormComponent implements OnInit {
   loading = false;
   isEditMode = false;
   isEdit = false; // Alias for template compatibility
+  accountId: string | null = null;
+  currentAccount: BankAccount | null = null;
   
   // Account types for dropdown
   accountTypes = [
@@ -46,23 +48,39 @@ export class AccountFormComponent implements OnInit {
     { value: 'CURRENT', label: 'Current Account' }
   ];
 
+  // Account status options
+  statusOptions = [
+    { value: 'ACTIVE', label: 'Active' },
+    { value: 'SUSPENDED', label: 'Suspended' }
+  ];
+
   constructor(
     private fb: FormBuilder,
     private accountService: AccountService,
     private customerService: CustomerService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {
     this.accountForm = this.fb.group({
       customerId: ['', Validators.required],
       initialBalance: [0, [Validators.required, Validators.min(0)]],
       accountType: ['SAVING', Validators.required],
       overdraft: [0], // For current accounts
-      interestRate: [0] // For saving accounts
+      interestRate: [0], // For saving accounts
+      status: ['ACTIVE'] // For edit mode
     });
   }
-
   ngOnInit(): void {
+    // Check if we're in edit mode
+    this.accountId = this.route.snapshot.params['id'];
+    this.isEditMode = !!this.accountId;
+    this.isEdit = this.isEditMode;
+    
     this.loadCustomers();
+    
+    if (this.isEditMode) {
+      this.loadAccountForEdit();
+    }
   }
 
   loadCustomers(): void {
@@ -77,38 +95,142 @@ export class AccountFormComponent implements OnInit {
     });
   }
 
-  onSubmit(): void {
-    if (this.accountForm.valid) {
+  loadAccountForEdit(): void {
+    if (!this.accountId) return;
+    
+    this.loading = true;
+    this.accountService.getAccount(this.accountId).subscribe({
+      next: (account) => {
+        this.currentAccount = account;
+        this.populateFormForEdit(account);
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error loading account for edit:', error);
+        alert('Failed to load account details');
+        this.loading = false;
+        this.router.navigate(['/accounts']);
+      }
+    });
+  }
+  populateFormForEdit(account: BankAccount): void {
+    const formValue: any = {
+      customerId: account.customer?.id,
+      initialBalance: account.balance,
+      accountType: account.type,
+      status: account.status || 'ACTIVE'
+    };
+
+    if (account.type === 'CURRENT') {
+      formValue.overdraft = (account as CurrentAccount).overdraft || 0;
+    } else if (account.type === 'SAVING') {
+      formValue.interestRate = (account as SavingAccount).interestRate || 0;
+    }
+
+    this.accountForm.patchValue(formValue);
+    
+    // Disable fields that shouldn't be editable in edit mode
+    this.accountForm.get('customerId')?.disable();
+    this.accountForm.get('accountType')?.disable();
+    
+    this.onAccountTypeChange(); // Update validators
+  }  onSubmit(): void {
+    if (this.accountForm.valid || (this.isEditMode && this.isFormValidForEdit())) {
       this.loading = true;
-      const formValue = this.accountForm.value;
-      
-      const request: CreateAccountRequest = {
-        customerId: formValue.customerId,
-        initialBalance: formValue.initialBalance,
-        overdraft: formValue.accountType === 'CURRENT' ? formValue.overdraft : undefined,
-        interestRate: formValue.accountType === 'SAVING' ? formValue.interestRate : undefined
-      };
+      const formValue = this.accountForm.getRawValue(); // Use getRawValue() to include disabled controls
 
-      const accountCreation$ = formValue.accountType === 'CURRENT' 
-        ? this.accountService.createCurrentAccount(request)
-        : this.accountService.createSavingAccount(request);
-
-      accountCreation$.subscribe({
-        next: (account) => {
-          this.loading = false;
-          alert('Account created successfully!');
-          this.router.navigate(['/accounts']);
-        },
-        error: (error) => {
-          this.loading = false;
-          console.error('Error creating account:', error);
-          alert('Failed to create account');
+      if (this.isEditMode) {
+        this.updateAccount(formValue);
+      } else {
+        this.createAccount(formValue);
+      }
+    } else {
+      // Mark all controls as touched to show validation errors
+      Object.keys(this.accountForm.controls).forEach(key => {
+        const control = this.accountForm.get(key);
+        if (control && control.enabled) {
+          control.markAsTouched();
         }
       });
     }
   }
 
+  private isFormValidForEdit(): boolean {
+    // For edit mode, only check enabled controls
+    const controls = this.accountForm.controls;
+    for (const key in controls) {
+      const control = controls[key];
+      if (control.enabled && control.invalid) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  createAccount(formValue: any): void {
+    const request: CreateAccountRequest = {
+      customerId: formValue.customerId,
+      initialBalance: formValue.initialBalance,
+      overdraft: formValue.accountType === 'CURRENT' ? formValue.overdraft : undefined,
+      interestRate: formValue.accountType === 'SAVING' ? formValue.interestRate : undefined
+    };
+
+    const accountCreation$ = formValue.accountType === 'CURRENT' 
+      ? this.accountService.createCurrentAccount(request)
+      : this.accountService.createSavingAccount(request);
+
+    accountCreation$.subscribe({
+      next: (account) => {
+        this.loading = false;
+        alert('Account created successfully!');
+        this.router.navigate(['/accounts']);
+      },
+      error: (error) => {
+        this.loading = false;
+        console.error('Error creating account:', error);
+        alert('Failed to create account');
+      }
+    });
+  }  updateAccount(formValue: any): void {
+    if (!this.accountId) return;
+
+    const updateData: any = {
+      balance: formValue.initialBalance,
+      status: formValue.status
+    };
+
+    // Only include the relevant field for the current account type
+    // Account type cannot be changed in edit mode, so we only update the appropriate field
+    if (this.currentAccount?.type === 'CURRENT') {
+      updateData.overdraft = formValue.overdraft;
+    } else if (this.currentAccount?.type === 'SAVING') {
+      updateData.interestRate = formValue.interestRate;
+    }    this.accountService.updateAccount(this.accountId, updateData).subscribe({
+      next: (updatedAccount) => {
+        this.loading = false;
+        alert('Account updated successfully!');
+        
+        // Update the current account and reload the form with fresh data
+        this.currentAccount = updatedAccount;
+        this.populateFormForEdit(updatedAccount);
+        
+        // Optionally redirect to accounts list after a short delay to let user see the changes
+        // setTimeout(() => {
+        //   this.router.navigate(['/accounts']);
+        // }, 2000);
+      },
+      error: (error) => {
+        this.loading = false;
+        console.error('Error updating account:', error);
+        alert('Failed to update account');
+      }
+    });
+  }
   onCancel(): void {
+    this.router.navigate(['/accounts']);
+  }
+
+  goToAccountsList(): void {
     this.router.navigate(['/accounts']);
   }
 

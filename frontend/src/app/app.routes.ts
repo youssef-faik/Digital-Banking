@@ -28,8 +28,7 @@ export const routes: Routes = [
       .then(m => m.DashboardComponent),
     canActivate: [authGuard]
   },
-  
-  // Customer routes
+    // Customer routes
   {
     path: 'customers',
     canActivate: [authGuard],
@@ -48,6 +47,11 @@ export const routes: Routes = [
         path: 'edit/:id',
         loadComponent: () => import('./components/customer/customer-form/customer-form.component')
           .then(m => m.CustomerFormComponent)
+      },
+      {
+        path: ':id',
+        loadComponent: () => import('./components/customer/customer-details/customer-details.component')
+          .then(m => m.CustomerDetailsComponent)
       }
     ]
   },
@@ -79,12 +83,16 @@ export const routes: Routes = [
       }
     ]
   },
-  
-  // Operation routes
+    // Operation routes
   {
     path: 'operations',
     canActivate: [authGuard],
     children: [
+      {
+        path: '',
+        loadComponent: () => import('./components/operation/operation-list/operation-list.component')
+          .then(m => m.OperationListComponent)
+      },
       {
         path: 'credit',
         loadComponent: () => import('./components/operation/credit/credit.component')

@@ -1,0 +1,179 @@
+.customer-details-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 16px;
+}
+
+.loading-text {
+  margin: 0;
+  color: #666;
+  font-size: 16px;
+}
+
+.details-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.back-btn {
+  color: #666;
+}
+
+.page-title h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 500;
+  color: #333;
+}
+
+.customer-name {
+  color: #666;
+  font-size: 16px;
+  font-weight: normal;
+}
+
+.header-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.info-section {
+  margin-bottom: 24px;
+}
+
+.info-card {
+  max-width: 600px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.label {
+  font-weight: 500;
+  color: #666;
+  min-width: 140px;
+}
+
+.value {
+  color: #333;
+  text-align: right;
+  word-break: break-all;
+}
+
+.accounts-section {
+  margin-top: 24px;
+}
+
+.accounts-card {
+  width: 100%;
+}
+
+.no-accounts {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: #666;
+}
+
+.no-accounts-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 16px;
+  color: #ccc;
+}
+
+.accounts-table-container {
+  overflow-x: auto;
+  margin-top: 16px;
+}
+
+.accounts-table {
+  width: 100%;
+  min-width: 600px;
+}
+
+.account-id {
+  font-family: 'Courier New', monospace;
+  background: #f5f5f5;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #666;
+}
+
+.balance {
+  font-weight: 500;
+  font-size: 16px;
+  color: #2e7d32;
+}
+
+.balance.negative {
+  color: #d32f2f;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .customer-details-container {
+    padding: 16px;
+  }
+  
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .header-buttons {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  
+  .info-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .label {
+    min-width: auto;
+  }
+  
+  .value {
+    text-align: left;
+  }
+}

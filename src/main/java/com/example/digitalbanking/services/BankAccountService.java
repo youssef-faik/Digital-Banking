@@ -12,14 +12,17 @@ public interface BankAccountService {
     CustomerDTO getCustomer(Long customerId);
     CustomerDTO updateCustomer(Long customerId, CustomerDTO customerDTO);
     void deleteCustomer(Long customerId);
-    Page<CustomerDTO> listCustomers(Pageable pageable);
-
-    BankAccountDTO getBankAccount(String accountId);
+    Page<CustomerDTO> listCustomers(Pageable pageable);    BankAccountDTO getBankAccount(String accountId);
     CurrentAccountDTO saveCurrentBankAccount(double initialBalance, double overDraft, Long customerId);
     SavingAccountDTO saveSavingBankAccount(double initialBalance, double interestRate, Long customerId);
     Page<BankAccountDTO> bankAccountList(Pageable pageable);
 
     Page<BankAccountDTO> listAccountsByCustomer(Long customerId, Pageable pageable);
+    
+    // Account Update and Delete operations
+    BankAccountDTO updateBankAccount(String accountId, BankAccountUpdateDTO updateDTO);
+    void deleteBankAccount(String accountId);
+    BankAccountDTO toggleAccountStatus(String accountId, String status);
 
     void debit(DebitDTO debitDTO);
     void credit(CreditDTO creditDTO);    void transfer(TransferRequestDTO transferRequestDTO);
@@ -28,8 +31,10 @@ public interface BankAccountService {
     AccountHistoryDTO getAccountHistory(String accountId, int page, int size);
     DashboardStatsDTO getDashboardStats(); // New method for dashboard statistics
     DashboardChartDataDTO getDashboardChartData(); // New method for dashboard chart data
-    
-    // Enhanced dashboard methods
+      // Enhanced dashboard methods
     List<RecentTransactionDTO> getRecentTransactions(int limit);
     FinancialMetricsDTO getFinancialMetrics();
+    
+    // Operations methods
+    Page<AccountOperationDTO> getAllUserOperations(int page, int size);
 }

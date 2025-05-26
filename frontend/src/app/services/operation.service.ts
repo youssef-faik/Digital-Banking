@@ -1,29 +1,29 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { AccountOperation } from '../models/bank.models';
+import { AccountOperation, AccountHistoryDTO, Page, AccountOperationDTO } from '../models/bank.models';
 import { DebitRequest, CreditRequest, TransferRequest } from '../models/operation.models';
 
 @Injectable({
   providedIn: 'root'
 })
 export class OperationService {
-  private readonly baseUrl = 'http://localhost:8080/api/operations';
+  private readonly baseUrl = 'http://localhost:8080/api/accounts';
 
   constructor(private http: HttpClient) { }
 
   /**
    * Perform debit operation
    */
-  debit(request: DebitRequest): Observable<AccountOperation> {
-    return this.http.post<AccountOperation>(`${this.baseUrl}/debit`, request);
+  debit(request: DebitRequest): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/debit`, request);
   }
 
   /**
    * Perform credit operation
    */
-  credit(request: CreditRequest): Observable<AccountOperation> {
-    return this.http.post<AccountOperation>(`${this.baseUrl}/credit`, request);
+  credit(request: CreditRequest): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/credit`, request);
   }
 
   /**
@@ -39,33 +39,30 @@ export class OperationService {
   getOperationById(operationId: number): Observable<AccountOperation> {
     return this.http.get<AccountOperation>(`${this.baseUrl}/${operationId}`);
   }
-
   /**
    * Get all operations with optional pagination
    */
-  getAllOperations(page?: number, size?: number): Observable<AccountOperation[]> {
+  getAllOperations(page?: number, size?: number): Observable<Page<AccountOperationDTO>> {
     let params = new HttpParams();
     if (page !== undefined) params = params.set('page', page.toString());
     if (size !== undefined) params = params.set('size', size.toString());
     
-    return this.http.get<AccountOperation[]>(this.baseUrl, { params });
-  }
-
-  /**
+    return this.http.get<Page<AccountOperationDTO>>(`${this.baseUrl}/operations`, { params });
+  }/**
    * Get operations by account ID with pagination
    */
-  getOperationsByAccountId(accountId: string, page: number = 0, size: number = 10): Observable<AccountOperation[]> {
+  getOperationsByAccountId(accountId: string, page: number = 0, size: number = 10): Observable<AccountHistoryDTO> {
     let params = new HttpParams()
       .set('page', page.toString())
       .set('size', size.toString());
     
-    return this.http.get<AccountOperation[]>(`${this.baseUrl}/account/${accountId}`, { params });
+    return this.http.get<AccountHistoryDTO>(`http://localhost:8080/api/accounts/${accountId}/operations`, { params });
   }
 
   /**
    * Get account history (alias for getOperationsByAccountId)
    */
-  getAccountHistory(accountId: string, page: number = 0, size: number = 10): Observable<AccountOperation[]> {
+  getAccountHistory(accountId: string, page: number = 0, size: number = 10): Observable<AccountHistoryDTO> {
     return this.getOperationsByAccountId(accountId, page, size);
   }
 

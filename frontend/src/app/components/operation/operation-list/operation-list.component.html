@@ -1,0 +1,163 @@
+<div class="operation-list-container">
+  <mat-card class="header-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>receipt_long</mat-icon>
+        All Operations
+      </mat-card-title>
+      <mat-card-subtitle>View and manage all banking operations</mat-card-subtitle>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <div class="filters-row">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search operations</mat-label>
+          <input matInput [formControl]="searchControl" placeholder="Search by account ID, description, or type">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="type-filter">
+          <mat-label>Operation Type</mat-label>
+          <mat-select [formControl]="typeFilter">
+            <mat-option value="">All Types</mat-option>
+            <mat-option value="CREDIT">Credit</mat-option>
+            <mat-option value="DEBIT">Debit</mat-option>
+            <mat-option value="TRANSFER">Transfer</mat-option>
+          </mat-select>
+        </mat-form-field>
+        
+        <div class="action-buttons">
+          <button mat-raised-button color="primary" (click)="navigateToCredit()" class="action-button">
+            <mat-icon>add_circle</mat-icon>
+            Credit
+          </button>
+          <button mat-raised-button color="warn" (click)="navigateToDebit()" class="action-button">
+            <mat-icon>remove_circle</mat-icon>
+            Debit
+          </button>
+          <button mat-raised-button color="accent" (click)="navigateToTransfer()" class="action-button">
+            <mat-icon>swap_horiz</mat-icon>
+            Transfer
+          </button>
+          <button mat-icon-button (click)="refreshOperations()" matTooltip="Refresh operations">
+            <mat-icon>refresh</mat-icon>
+          </button>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="table-card">
+    <mat-card-content>
+      <div class="table-container">
+        <table mat-table [dataSource]="filteredOperations" class="operations-table">
+          
+          <!-- Date Column -->
+          <ng-container matColumnDef="date">
+            <th mat-header-cell *matHeaderCellDef>Date</th>
+            <td mat-cell *matCellDef="let operation">
+              {{ formatDate(operation.operationDate) }}
+            </td>
+          </ng-container>
+
+          <!-- Type Column -->
+          <ng-container matColumnDef="type">
+            <th mat-header-cell *matHeaderCellDef>Type</th>
+            <td mat-cell *matCellDef="let operation">
+              <mat-chip [color]="getOperationTypeColor(operation.type)" selected>
+                <mat-icon>{{ getOperationIcon(operation.type) }}</mat-icon>
+                {{ operation.type }}
+              </mat-chip>
+            </td>
+          </ng-container>
+
+          <!-- Account ID Column -->
+          <ng-container matColumnDef="accountId">
+            <th mat-header-cell *matHeaderCellDef>Account ID</th>
+            <td mat-cell *matCellDef="let operation">
+              <button mat-button color="primary" (click)="navigateToAccount(operation.bankAccountId)" class="account-link">
+                {{ operation.bankAccountId }}
+              </button>
+            </td>
+          </ng-container>
+
+          <!-- Amount Column -->
+          <ng-container matColumnDef="amount">
+            <th mat-header-cell *matHeaderCellDef>Amount</th>
+            <td mat-cell *matCellDef="let operation">
+              <span class="amount" [class]="operation.type.toLowerCase()">
+                {{ formatCurrency(operation.amount) }}
+              </span>
+            </td>
+          </ng-container>
+
+          <!-- Description Column -->
+          <ng-container matColumnDef="description">
+            <th mat-header-cell *matHeaderCellDef>Description</th>
+            <td mat-cell *matCellDef="let operation">
+              {{ operation.description || 'No description' }}
+            </td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let operation">
+              <div class="action-buttons">
+                <button 
+                  mat-icon-button 
+                  color="primary" 
+                  (click)="navigateToAccount(operation.bankAccountId)"
+                  matTooltip="View account details">
+                  <mat-icon>visibility</mat-icon>
+                </button>
+              </div>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+
+        <!-- Loading State -->
+        <div *ngIf="isLoading" class="loading-container">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>Loading operations...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!isLoading && filteredOperations.length === 0" class="empty-container">
+          <mat-icon class="empty-icon">receipt_long</mat-icon>
+          <h3>No operations found</h3>
+          <p *ngIf="searchControl.value || typeFilter.value">
+            Try adjusting your search criteria or filters.
+          </p>
+          <p *ngIf="!searchControl.value && !typeFilter.value">
+            No banking operations have been performed yet.
+          </p>
+          <div class="empty-actions">
+            <button mat-raised-button color="primary" (click)="navigateToCredit()">
+              <mat-icon>add_circle</mat-icon>
+              Add Credit
+            </button>
+            <button mat-raised-button color="accent" (click)="navigateToTransfer()">
+              <mat-icon>swap_horiz</mat-icon>
+              Transfer Money
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <mat-paginator 
+        *ngIf="!isLoading && filteredOperations.length > 0"
+        [length]="totalElements"
+        [pageSize]="pageSize"
+        [pageIndex]="pageIndex"
+        [pageSizeOptions]="[5, 10, 25, 50]"
+        (page)="onPageChange($event)"
+        showFirstLastButtons>
+      </mat-paginator>
+    </mat-card-content>
+  </mat-card>
+</div>

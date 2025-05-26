@@ -40,9 +40,17 @@ public class CustomerServiceImpl implements CustomerService {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return appUserRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Authenticated user not found: " + username));
-    }
-
-    private void checkCustomerOwnership(Customer customer, AppUser appUser) {
+    }    private void checkCustomerOwnership(Customer customer, AppUser appUser) {
+        // Allow ADMIN users to access any customer
+        boolean isAdmin = appUser.getRoles().stream()
+                .anyMatch(role -> "ADMIN".equals(role.getRoleName()));
+        
+        if (isAdmin) {
+            log.info("Admin user {} accessing customer {}", appUser.getUsername(), customer.getId());
+            return;
+        }
+        
+        // For non-admin users, check ownership
         if (customer.getAppUser() == null || !customer.getAppUser().getUserId().equals(appUser.getUserId())) {
             log.warn("User {} attempted to access or modify customer {} owned by a different user or with no owner.", appUser.getUsername(), customer.getId());
             throw new AccessDeniedException("You do not have permission to access or modify this customer.");
@@ -77,9 +85,7 @@ public class CustomerServiceImpl implements CustomerService {
                 .orElseThrow(() -> new CustomerNotFoundException("Customer Not found with ID: " + customerId));
         checkCustomerOwnership(customer, currentUser);
         return dtoMapper.fromCustomer(customer);
-    }
-
-    @Override
+    }    @Override
     public CustomerDTO updateCustomer(CustomerDTO customerDTO) throws CustomerNotFoundException {
         log.info("Updating Customer: {}", customerDTO.getId());
         AppUser currentUser = getCurrentAuthenticatedAppUser();
@@ -87,11 +93,12 @@ public class CustomerServiceImpl implements CustomerService {
                 .orElseThrow(() -> new CustomerNotFoundException("Customer Not found with ID: " + customerDTO.getId()));
         checkCustomerOwnership(existingCustomer, currentUser);
 
-        Customer customerToUpdate = dtoMapper.fromCustomerDTO(customerDTO);
-        customerToUpdate.setId(existingCustomer.getId()); // Ensure ID is set for update
-        customerToUpdate.setAppUser(currentUser); // Owner remains the current user who is updating
+        // Update only the modifiable fields on the existing entity to avoid foreign key issues
+        existingCustomer.setName(customerDTO.getName());
+        existingCustomer.setEmail(customerDTO.getEmail());
+        // Don't modify appUser or bankAccounts relationships
 
-        Customer updatedCustomer = customerRepository.save(customerToUpdate);
+        Customer updatedCustomer = customerRepository.save(existingCustomer);
         return dtoMapper.fromCustomer(updatedCustomer);
     }
 

@@ -1,0 +1,134 @@
+<div class="customer-details-container">
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p class="loading-text">Loading customer details...</p>
+  </div>
+
+  <!-- Customer Details -->
+  <div *ngIf="!loading && customer" class="details-content">
+    <!-- Header Section -->
+    <div class="page-header">
+      <div class="header-actions">
+        <button mat-icon-button (click)="goBack()" class="back-btn">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+        <div class="page-title">
+          <h1>Customer Details</h1>
+          <span class="customer-name">{{ customer.name }}</span>
+        </div>
+      </div>
+      <div class="header-buttons">
+        <button mat-raised-button color="primary" (click)="editCustomer()">
+          <mat-icon>edit</mat-icon>
+          Edit Customer
+        </button>
+      </div>
+    </div>
+
+    <!-- Customer Information Card -->
+    <div class="info-section">
+      <mat-card class="info-card customer-info">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>person</mat-icon>
+          <mat-card-title>Customer Information</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="info-row">
+            <span class="label">Customer ID:</span>
+            <span class="value">{{ customer.id }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Full Name:</span>
+            <span class="value">{{ customer.name }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Email Address:</span>
+            <span class="value">{{ customer.email }}</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Customer Accounts Section -->
+    <div class="accounts-section">
+      <mat-card class="accounts-card">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>account_balance</mat-icon>
+          <mat-card-title>Bank Accounts</mat-card-title>
+          <mat-card-subtitle>{{ customerAccounts.length }} account(s)</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div *ngIf="customerAccounts.length === 0" class="no-accounts">
+            <mat-icon class="no-accounts-icon">account_balance_wallet</mat-icon>
+            <p>This customer has no bank accounts yet.</p>
+            <button mat-raised-button color="primary" [routerLink]="['/accounts/new']">
+              <mat-icon>add</mat-icon>
+              Create Account
+            </button>
+          </div>
+
+          <div *ngIf="customerAccounts.length > 0" class="accounts-table-container">
+            <table mat-table [dataSource]="customerAccounts" class="accounts-table">
+              
+              <!-- Account ID Column -->
+              <ng-container matColumnDef="id">
+                <th mat-header-cell *matHeaderCellDef>Account ID</th>
+                <td mat-cell *matCellDef="let account">
+                  <code class="account-id">{{account.id}}</code>
+                </td>
+              </ng-container>
+
+              <!-- Type Column -->
+              <ng-container matColumnDef="type">
+                <th mat-header-cell *matHeaderCellDef>Type</th>
+                <td mat-cell *matCellDef="let account">
+                  <mat-chip [color]="getAccountTypeColor(account.type)" selected>
+                    {{account.type === 'CURRENT' ? 'Current' : 'Saving'}}
+                  </mat-chip>
+                </td>
+              </ng-container>
+
+              <!-- Balance Column -->
+              <ng-container matColumnDef="balance">
+                <th mat-header-cell *matHeaderCellDef>Balance</th>
+                <td mat-cell *matCellDef="let account">
+                  <span class="balance" [class.negative]="account.balance < 0">
+                    {{formatCurrency(account.balance)}}
+                  </span>
+                </td>
+              </ng-container>
+
+              <!-- Status Column -->
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let account">
+                  <mat-chip [color]="getStatusColor(account.status || 'ACTIVE')" selected>
+                    {{account.status || 'ACTIVE'}}
+                  </mat-chip>
+                </td>
+              </ng-container>
+
+              <!-- Actions Column -->
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef>Actions</th>
+                <td mat-cell *matCellDef="let account">
+                  <button 
+                    mat-icon-button 
+                    color="primary" 
+                    (click)="viewAccount(account)"
+                    matTooltip="View account details">
+                    <mat-icon>visibility</mat-icon>
+                  </button>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            </table>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>

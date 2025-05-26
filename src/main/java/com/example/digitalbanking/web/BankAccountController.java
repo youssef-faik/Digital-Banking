@@ -1,12 +1,13 @@
 package com.example.digitalbanking.web;
 
 import com.example.digitalbanking.dtos.AccountHistoryDTO;
+import com.example.digitalbanking.dtos.AccountOperationDTO;
 import com.example.digitalbanking.dtos.BankAccountDTO;
+import com.example.digitalbanking.dtos.BankAccountUpdateDTO;
 import com.example.digitalbanking.dtos.CreateCurrentAccountRequestDTO;
 import com.example.digitalbanking.dtos.CurrentAccountDTO;
 import com.example.digitalbanking.dtos.CreateSavingAccountRequestDTO;
 import com.example.digitalbanking.dtos.SavingAccountDTO;
-import com.example.digitalbanking.dtos.AccountOperationDTO;
 import com.example.digitalbanking.dtos.DebitDTO;
 import com.example.digitalbanking.dtos.CreditDTO;
 import com.example.digitalbanking.dtos.TransferRequestDTO;
@@ -22,9 +23,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -118,17 +122,14 @@ public class BankAccountController {
             log.error("Error listing accounts for customer ID {}: {}", customerId, e.getMessage());
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error listing accounts for customer", e);
         }
-    }
-
-    @GetMapping("/{accountId}/operations")
-    public ResponseEntity<AccountHistoryDTO> getAccountOperations( // Updated return type
+    }    @GetMapping("/{accountId}/operations")
+    public ResponseEntity<AccountHistoryDTO> getAccountOperations(
             @PathVariable String accountId,
             Pageable pageable) {
         log.info("REST request to get operations for account ID: {}", accountId);
         try {
-            // Updated to call with page number and size, and to match the new return type
-            AccountHistoryDTO history = bankAccountService.getAccountHistory(accountId, pageable.getPageNumber(), pageable.getPageSize());
-            return ResponseEntity.ok(history);
+            AccountHistoryDTO page = bankAccountService.getAccountHistory(accountId, pageable.getPageNumber(), pageable.getPageSize());
+            return ResponseEntity.ok(page);
         } catch (BankAccountNotFoundException e) {
             log.warn("Bank account not found when fetching operations: {}", e.getMessage());
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Bank account not found: " + accountId, e);
@@ -198,6 +199,82 @@ public class BankAccountController {
         } catch (RuntimeException e) {
             log.error("Error processing transfer: {}", e.getMessage());
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error processing transfer operation. Please try again later.", e);
+        }
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<BankAccountDTO> updateBankAccount(
+            @PathVariable String id,
+            @Valid @RequestBody BankAccountUpdateDTO updateDTO) {
+        log.info("REST request to update BankAccount : {} with data : {}", id, updateDTO);
+        try {
+            BankAccountDTO updatedAccount = bankAccountService.updateBankAccount(id, updateDTO);
+            return ResponseEntity.ok(updatedAccount);
+        } catch (BankAccountNotFoundException e) {
+            log.warn("Bank account not found with ID: {} for update", id);
+            return ResponseEntity.notFound().build();
+        } catch (AccessDeniedException e) {
+            log.warn("Access denied for updating account ID {}: {}", id, e.getMessage());
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage(), e);
+        } catch (RuntimeException e) {
+            log.error("Error updating account with ID: {}", id, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error updating account", e);
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteBankAccount(@PathVariable String id) {
+        log.info("REST request to delete BankAccount : {}", id);
+        try {
+            bankAccountService.deleteBankAccount(id);
+            return ResponseEntity.noContent().build();
+        } catch (BankAccountNotFoundException e) {
+            log.warn("Bank account not found with ID: {} for deletion", id);
+            return ResponseEntity.notFound().build();
+        } catch (AccessDeniedException e) {
+            log.warn("Access denied for deleting account ID {}: {}", id, e.getMessage());
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage(), e);
+        } catch (RuntimeException e) {
+            log.error("Error deleting account with ID: {}", id, e);
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        }
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<BankAccountDTO> toggleAccountStatus(
+            @PathVariable String id,
+            @RequestBody String status) {
+        log.info("REST request to change status of BankAccount {} to {}", id, status);
+        try {
+            BankAccountDTO updatedAccount = bankAccountService.toggleAccountStatus(id, status);
+            return ResponseEntity.ok(updatedAccount);
+        } catch (BankAccountNotFoundException e) {
+            log.warn("Bank account not found with ID: {} for status change", id);
+            return ResponseEntity.notFound().build();
+        } catch (AccessDeniedException e) {
+            log.warn("Access denied for changing status of account ID {}: {}", id, e.getMessage());
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage(), e);
+        } catch (RuntimeException e) {
+            log.error("Error changing status of account with ID: {}", id, e);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+    }
+
+    @GetMapping("/operations")
+    public ResponseEntity<Page<AccountOperationDTO>> getAllUserOperations(Pageable pageable) {
+        log.info("REST request to get all operations for current user");
+        try {
+            Page<AccountOperationDTO> operations = bankAccountService.getAllUserOperations(
+                pageable.getPageNumber(), 
+                pageable.getPageSize()
+            );
+            return ResponseEntity.ok(operations);
+        } catch (AccessDeniedException e) {
+            log.warn("Access denied when fetching user operations: {}", e.getMessage());
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage(), e);
+        } catch (RuntimeException e) {
+            log.error("Error fetching user operations: {}", e.getMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error fetching operations", e);
         }
     }
 }
