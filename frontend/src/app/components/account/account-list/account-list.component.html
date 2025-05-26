@@ -154,6 +154,17 @@
           </button>
         </div>
       </div>
+      
+      <!-- Pagination -->
+      <mat-paginator 
+        *ngIf="!isLoading && filteredAccounts.length > 0"
+        [length]="totalElements"
+        [pageSize]="pageSize"
+        [pageIndex]="pageIndex"
+        [pageSizeOptions]="pageSizeOptions"
+        (page)="onPageChange($event)"
+        showFirstLastButtons>
+      </mat-paginator>
     </mat-card-content>
   </mat-card>
 </div>

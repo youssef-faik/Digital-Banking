@@ -85,9 +85,7 @@
         <div *ngIf="isLoading" class="loading-container">
           <mat-icon class="loading-icon">refresh</mat-icon>
           <p>Loading customers...</p>
-        </div>
-
-        <!-- Empty State -->
+        </div>        <!-- Empty State -->
         <div *ngIf="!isLoading && filteredCustomers.length === 0" class="empty-container">
           <mat-icon class="empty-icon">people_outline</mat-icon>
           <h3>No customers found</h3>
@@ -99,6 +97,17 @@
           </button>
         </div>
       </div>
+      
+      <!-- Pagination -->
+      <mat-paginator 
+        *ngIf="!isLoading && filteredCustomers.length > 0"
+        [length]="totalElements"
+        [pageSize]="pageSize"
+        [pageIndex]="pageIndex"
+        [pageSizeOptions]="pageSizeOptions"
+        (page)="onPageChange($event)"
+        showFirstLastButtons>
+      </mat-paginator>
     </mat-card-content>
   </mat-card>
 </div>

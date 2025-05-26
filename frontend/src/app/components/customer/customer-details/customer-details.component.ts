@@ -73,9 +73,10 @@ export class CustomerDetailsComponent implements OnInit {
 
   loadCustomerAccounts(): void {
     if (!this.customerId) return;
-    
-    this.accountService.getAllAccounts().subscribe({
-      next: (accounts) => {
+      this.accountService.getAllAccounts().subscribe({
+      next: (response) => {
+        // Handle both paginated and non-paginated responses
+        const accounts = Array.isArray(response) ? response : response.content || [];
         // Filter accounts for this customer
         this.customerAccounts = accounts.filter(account => 
           account.customer?.id === this.customerId

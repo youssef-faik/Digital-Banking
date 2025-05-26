@@ -10,6 +10,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatPaginatorModule } from '@angular/material/paginator';
 import { Router, RouterModule } from '@angular/router';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
@@ -19,8 +20,7 @@ import { BankAccount } from '../../../models/bank.models';
 
 @Component({
   selector: 'app-account-list',
-  standalone: true,
-  imports: [
+  standalone: true,  imports: [
     CommonModule,
     MatTableModule,
     MatCardModule,
@@ -32,6 +32,7 @@ import { BankAccount } from '../../../models/bank.models';
     MatChipsModule,
     MatTooltipModule,
     MatSnackBarModule,
+    MatPaginatorModule,
     RouterModule,
     ReactiveFormsModule
   ],
@@ -49,29 +50,59 @@ export class AccountListComponent implements OnInit {
   typeFilter = new FormControl('');
   statusFilter = new FormControl('');
   filteredAccounts: BankAccount[] = [];
+  
+  // Pagination properties
+  pageSize = 10;
+  pageIndex = 0;
+  totalElements = 0;
+  pageSizeOptions = [5, 10, 25, 50];
+  
+  // Current filters for server-side filtering
+  currentSearchTerm = '';
+  currentTypeFilter = '';
+  currentStatusFilter = '';
 
   ngOnInit() {
     this.loadAccounts();
     this.setupFilters();
-  }
-  setupFilters() {
+  }  setupFilters() {
     this.searchControl.valueChanges
       .pipe(
         debounceTime(300),
         distinctUntilChanged()
       )
-      .subscribe(() => this.applyFilters());
+      .subscribe(() => {
+        this.pageIndex = 0; // Reset to first page when filtering
+        this.applyFilters();
+      });
 
-    this.typeFilter.valueChanges.subscribe(() => this.applyFilters());
-    this.statusFilter.valueChanges.subscribe(() => this.applyFilters());
+    this.typeFilter.valueChanges.subscribe(() => {
+      this.pageIndex = 0; // Reset to first page when filtering
+      this.applyFilters();
+    });
+    
+    this.statusFilter.valueChanges.subscribe(() => {
+      this.pageIndex = 0; // Reset to first page when filtering
+      this.applyFilters();
+    });
   }
-
   loadAccounts() {
     this.isLoading = true;
-    this.accountService.getAllAccounts().subscribe({
-      next: (accounts: BankAccount[]) => {
-        this.accounts = accounts;
-        this.filteredAccounts = accounts;
+    
+    // Use pagination parameters when calling getAllAccounts
+    this.accountService.getAllAccounts(this.pageIndex, this.pageSize).subscribe({
+      next: (response: any) => {
+        // Handle both paginated and non-paginated responses
+        if (response.content) {
+          // Paginated response
+          this.accounts = response.content;
+          this.totalElements = response.totalElements;
+        } else {
+          // Non-paginated response (fallback)
+          this.accounts = response;
+          this.totalElements = response.length;
+        }
+        this.applyClientSideFilters();
         this.isLoading = false;
       },
       error: (error: any) => {
@@ -84,15 +115,26 @@ export class AccountListComponent implements OnInit {
       }
     });
   }
+
   applyFilters() {
+    // Update current filter values
+    this.currentSearchTerm = this.searchControl.value || '';
+    this.currentTypeFilter = this.typeFilter.value || '';
+    this.currentStatusFilter = this.statusFilter.value || '';
+    
+    // For now, reload data from server and apply client-side filtering
+    // TODO: Implement server-side filtering when backend supports it
+    this.loadAccounts();
+  }
+
+  applyClientSideFilters() {
     let filtered = this.accounts;
 
     // Apply search filter
-    const searchTerm = this.searchControl.value?.toLowerCase() || '';
-    if (searchTerm) {
+    if (this.currentSearchTerm) {
+      const searchTerm = this.currentSearchTerm.toLowerCase();
       filtered = filtered.filter(account =>
         account.id.toLowerCase().includes(searchTerm) ||
-        // Use safe navigation for customer name and email
         account.customer?.name?.toLowerCase().includes(searchTerm) ||
         account.customer?.email?.toLowerCase().includes(searchTerm) ||
         (account.status && account.status.toLowerCase().includes(searchTerm)) ||
@@ -101,18 +143,22 @@ export class AccountListComponent implements OnInit {
     }
 
     // Apply type filter
-    const typeFilter = this.typeFilter.value;
-    if (typeFilter) {
-      filtered = filtered.filter(account => account.type === typeFilter);
+    if (this.currentTypeFilter) {
+      filtered = filtered.filter(account => account.type === this.currentTypeFilter);
     }
 
     // Apply status filter
-    const statusFilter = this.statusFilter.value;
-    if (statusFilter) {
-      filtered = filtered.filter(account => account.status === statusFilter);
+    if (this.currentStatusFilter) {
+      filtered = filtered.filter(account => account.status === this.currentStatusFilter);
     }
 
     this.filteredAccounts = filtered;
+  }
+
+  onPageChange(event: any): void {
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
+    this.loadAccounts();
   }
 
   addAccount() {
@@ -129,13 +175,12 @@ export class AccountListComponent implements OnInit {
   deleteAccount(account: BankAccount) {
     if (confirm(`Are you sure you want to delete account ${account.id}? This action cannot be undone.`)) {
       this.accountService.deleteAccount(account.id).subscribe({
-        next: () => {
-          this.snackBar.open(
+        next: () => {          this.snackBar.open(
             'Account deleted successfully',
             'Close',
             { duration: 3000, panelClass: 'success-snackbar' }
           );
-          this.loadAccounts(); // Refresh the list
+          this.loadAccounts(); // Reload current page// Refresh the list
         },
         error: (error) => {
           console.error('Error deleting account:', error);
@@ -155,13 +200,12 @@ export class AccountListComponent implements OnInit {
     
     if (confirm(`Are you sure you want to ${action} account ${account.id}?`)) {
       this.accountService.toggleAccountStatus(account.id, newStatus).subscribe({
-        next: () => {
-          this.snackBar.open(
+        next: () => {          this.snackBar.open(
             `Account ${action}d successfully`,
             'Close',
             { duration: 3000, panelClass: 'success-snackbar' }
           );
-          this.loadAccounts(); // Refresh the list
+          this.loadAccounts(); // Refresh the current page
         },
         error: (error) => {
           console.error('Error updating account status:', error);

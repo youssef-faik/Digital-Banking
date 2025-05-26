@@ -23,22 +23,40 @@ interface PageResponse<T> {
 export class AccountService {
   private readonly baseUrl = 'http://localhost:8080/api/accounts';
 
-  constructor(private http: HttpClient) { }
-  /**
+  constructor(private http: HttpClient) { }  /**
    * Get all accounts with optional pagination
    */
-  getAllAccounts(page?: number, size?: number): Observable<BankAccount[]> {    let params = new HttpParams();
+  getAllAccounts(page?: number, size?: number): Observable<PageResponse<BankAccount> | BankAccount[]> {
+    let params = new HttpParams();
     if (page !== undefined) params = params.set('page', page.toString());
-    if (size !== undefined) params = params.set('size', size.toString());    return this.http.get<PageResponse<BankAccountDTO>>(this.baseUrl, { params }).pipe(
-      map(response => {
-        return response.content.map(dto => ({
-          ...dto,
-          customer: dto.customer, // Backend now uses customer field
-          type: dto.type, // Ensure type is correctly mapped
-          status: dto.status || 'ACTIVE' // Provide a default status if null
-        } as BankAccount));
-      })
-    );
+    if (size !== undefined) params = params.set('size', size.toString());
+
+    if (page !== undefined && size !== undefined) {
+      // Return paginated response
+      return this.http.get<PageResponse<BankAccountDTO>>(this.baseUrl, { params }).pipe(
+        map(response => ({
+          ...response,
+          content: response.content.map(dto => ({
+            ...dto,
+            customer: dto.customer, // Backend now uses customer field
+            type: dto.type, // Ensure type is correctly mapped
+            status: dto.status || 'ACTIVE' // Provide a default status if null
+          } as BankAccount))
+        }))
+      );
+    } else {
+      // Return simple array (backward compatibility)
+      return this.http.get<PageResponse<BankAccountDTO>>(this.baseUrl, { params }).pipe(
+        map(response => {
+          return response.content.map(dto => ({
+            ...dto,
+            customer: dto.customer, // Backend now uses customer field
+            type: dto.type, // Ensure type is correctly mapped
+            status: dto.status || 'ACTIVE' // Provide a default status if null
+          } as BankAccount));
+        })
+      );
+    }
   }
 
   /**

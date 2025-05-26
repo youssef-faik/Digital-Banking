@@ -51,7 +51,12 @@ export class CustomerListComponent implements OnInit {
   isLoading = false;
   searchControl = new FormControl('');
   filteredCustomers: Customer[] = [];
-
+  
+  // Pagination properties
+  pageSize = 10;
+  pageIndex = 0;
+  totalElements = 0;
+  pageSizeOptions = [5, 10, 25, 50];
   ngOnInit() {
     this.loadCustomers();
     this.setupSearch();
@@ -64,16 +69,23 @@ export class CustomerListComponent implements OnInit {
         distinctUntilChanged()
       )
       .subscribe(searchTerm => {
-        this.filterCustomers(searchTerm || '');
+        this.pageIndex = 0; // Reset to first page when searching
+        this.loadCustomers(searchTerm || '');
       });
   }
 
-  loadCustomers() {
+  loadCustomers(searchTerm: string = '') {
     this.isLoading = true;
-    this.customerService.getCustomers().subscribe({
+    
+    const loadMethod = searchTerm ? 
+      this.customerService.searchCustomers(searchTerm, this.pageIndex, this.pageSize) :
+      this.customerService.getCustomers(this.pageIndex, this.pageSize);
+    
+    loadMethod.subscribe({
       next: (response: any) => {
-        this.customers = response.content || response;
+        this.customers = response.content || [];
         this.filteredCustomers = this.customers;
+        this.totalElements = response.totalElements || 0;
         this.isLoading = false;
       },
       error: (error: any) => {
@@ -87,17 +99,16 @@ export class CustomerListComponent implements OnInit {
     });
   }
 
-  filterCustomers(searchTerm: string) {
-    if (!searchTerm) {
-      this.filteredCustomers = this.customers;
-      return;
-    }
+  onPageChange(event: any): void {
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
+    this.loadCustomers(this.searchControl.value || '');
+  }
 
-    const term = searchTerm.toLowerCase();
-    this.filteredCustomers = this.customers.filter(customer =>
-      customer.name.toLowerCase().includes(term) ||
-      customer.email.toLowerCase().includes(term)
-    );
+  filterCustomers(searchTerm: string) {
+    // This method is no longer used for filtering since we use server-side pagination
+    // But keeping it for backward compatibility
+    this.loadCustomers(searchTerm);
   }
 
   addCustomer() {
@@ -126,12 +137,11 @@ export class CustomerListComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result && customer.id) {
         this.customerService.deleteCustomer(customer.id).subscribe({
-          next: () => {
-            this.snackBar.open('Customer deleted successfully!', 'Close', {
+          next: () => {            this.snackBar.open('Customer deleted successfully!', 'Close', {
               duration: 3000,
               panelClass: 'success-snackbar'
             });
-            this.loadCustomers();
+            this.loadCustomers(this.searchControl.value || ''); // Reload current page with search term
           },
           error: (error: any) => {
             this.snackBar.open(
