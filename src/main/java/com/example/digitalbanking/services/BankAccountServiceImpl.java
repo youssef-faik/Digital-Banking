@@ -5,15 +5,16 @@ import com.example.digitalbanking.entities.*;
 import com.example.digitalbanking.exceptions.BalanceNotSufficientException;
 import com.example.digitalbanking.exceptions.BankAccountNotFoundException;
 import com.example.digitalbanking.exceptions.CustomerNotFoundException;
-import com.example.digitalbanking.exceptions.CustomerDeletionException; // Import new exception
+import com.example.digitalbanking.exceptions.CustomerDeletionException;
 import com.example.digitalbanking.mappers.BankAccountMapper;
 import com.example.digitalbanking.repositories.AccountOperationRepository;
 import com.example.digitalbanking.repositories.BankAccountRepository;
 import com.example.digitalbanking.repositories.CustomerRepository;
-import com.example.digitalbanking.repositories.AppUserRepository; // Import AppUserRepository
+import com.example.digitalbanking.repositories.AppUserRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.Hibernate; // Added import for Hibernate.unproxy()
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest; // Added for PageRequest
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,15 +22,15 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
-import java.time.LocalDate; // Added for LocalDate
-import java.time.LocalDateTime; // Added for LocalDateTime
-import java.time.ZoneId; // Added for ZoneId
-import java.time.temporal.ChronoUnit; // Added for ChronoUnit
-import java.util.ArrayList; // Added for ArrayList
-import java.util.List; // Added for List (already implicitly via DTOs but good to have)
-import java.util.Map; // Added for Map
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors; // Added for Collectors
+import java.util.stream.Collectors;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.access.AccessDeniedException;
@@ -474,12 +475,32 @@ public class BankAccountServiceImpl implements BankAccountService {
 
         // Example: Account type distribution (Current vs Saving)
         List<BankAccount> userAccounts = bankAccountRepository.findAllByCustomerAppUser(currentUser);
-        long currentAccountsCount = userAccounts.stream().filter(acc -> acc instanceof CurrentAccount).count();
-        long savingAccountsCount = userAccounts.stream().filter(acc -> acc instanceof SavingAccount).count();
+        
+        log.info("User accounts found for distribution chart: {}", userAccounts.size());
+        userAccounts.forEach(acc -> {
+            if (acc != null) {
+                Object unproxiedAcc = Hibernate.unproxy(acc); // Unproxy before logging type
+                String customerName = (acc.getCustomer() != null) ? acc.getCustomer().getName() : "N/A";
+                log.info("Account ID: {}, Type: {}, Customer: {}", acc.getId(), unproxiedAcc.getClass().getSimpleName(), customerName);
+            } else {
+                log.info("Found a null account in userAccounts list.");
+            }
+        });
+
+        long currentAccountsCount = userAccounts.stream()
+                .filter(acc -> acc != null && Hibernate.unproxy(acc) instanceof CurrentAccount) // Use Hibernate.unproxy()
+                .count();
+        long savingAccountsCount = userAccounts.stream()
+                .filter(acc -> acc != null && Hibernate.unproxy(acc) instanceof SavingAccount) // Use Hibernate.unproxy()
+                .count();
+        
+        log.info("Counted Current Accounts: {}", currentAccountsCount);
+        log.info("Counted Saving Accounts: {}", savingAccountsCount);
 
         List<DataPointDTO> accountTypeDistribution = new ArrayList<>();
         accountTypeDistribution.add(new DataPointDTO("Current Accounts", (double) currentAccountsCount));
-        accountTypeDistribution.add(new DataPointDTO("Saving Accounts", (double) savingAccountsCount));        return new DashboardChartDataDTO(operationsTrend, accountTypeDistribution);
+        accountTypeDistribution.add(new DataPointDTO("Saving Accounts", (double) savingAccountsCount));
+        return new DashboardChartDataDTO(operationsTrend, accountTypeDistribution);
     }
 
     private AppUser getCurrentUser() {
