@@ -1,0 +1,72 @@
+% Modern section formatting with enhanced visual elements
+
+% Section formatting
+\titleformat{\section}
+{\LARGE\bfseries\sffamily\color{primary}}
+{}
+{0em}
+{%
+    \begin{tikzpicture}
+        \node[inner sep=0pt] (title) {\MakeUppercase{#1}};
+        \draw[primary, line width=1.5pt] 
+            ([yshift=-7pt]title.south west) -- ([yshift=-7pt]title.south east);
+    \end{tikzpicture}%
+}
+
+% Subsection formatting
+\titleformat{\subsection}
+{\Large\bfseries\sffamily\color{secondary}}
+{\thesubsection}
+{0.75em}
+{#1}
+[\vspace{-0.3em}\rule{\textwidth}{0.8pt}\vspace{0.3em}]
+
+% Subsubsection formatting
+\titleformat{\subsubsection}
+{\large\bfseries\sffamily\color{tertiary}}
+{\thesubsubsection}
+{0.5em}
+{#1}
+[\vspace{-0.2em}\textcolor{tertiary!50}{\rule{0.5\textwidth}{0.5pt}}\vspace{0.2em}]
+
+% Enhanced section divider
+\renewcommand{\sectiondivider}{
+    \begin{center}
+        \begin{tikzpicture}
+            \filldraw[fill=primary!5, draw=primary!50] (0,0) circle (0.5cm);
+            \node at (0,0) {\textcolor{primary}{\Large\faChevronDown}};
+            \draw[primary!50, dashed, line width=1pt] (-3,0) -- (-0.7,0);
+            \draw[primary!50, dashed, line width=1pt] (0.7,0) -- (3,0);
+        \end{tikzpicture}
+    \end{center}
+    \vspace{0.5cm}
+}
+
+% Chapter opening style (for larger documents)
+\newcommand{\chapteropening}[2]{
+    \clearpage
+    \thispagestyle{plain}
+    \begin{center}
+        \vspace*{2cm}
+        \begin{tikzpicture}
+            \node[fill=primary!10, draw=primary, text width=0.8\textwidth, 
+                  align=center, inner sep=20pt, rounded corners=10pt] {
+                \vspace{1cm}
+                {\Huge\bfseries\sffamily\textcolor{primary}{#1}\par}
+                \vspace{0.5cm}
+                {\large\sffamily\textcolor{darktext}{#2}\par}
+                \vspace{1cm}
+            };
+        \end{tikzpicture}
+    \end{center}
+    \vspace{2cm}
+}
+
+% Float placement strategy for consistent image layout
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.8}
+\renewcommand{\textfraction}{0.07}
+\renewcommand{\floatpagefraction}{0.7}
+\setcounter{topnumber}{3}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{5}

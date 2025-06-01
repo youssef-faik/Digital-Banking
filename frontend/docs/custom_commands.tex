@@ -1,0 +1,169 @@
+% Custom commands for consistent formatting
+\newcommand{\sectiondivider}{
+    \begin{center}
+        \textcolor{primary}{\rule{0.3\textwidth}{1pt}}
+        \quad\faChevronDown\quad
+        \textcolor{primary}{\rule{0.3\textwidth}{1pt}}
+    \end{center}
+}
+
+\newcommand{\featureheading}[1]{
+    \vspace{0.5em}
+    \noindent\textcolor{primary}{\textbf{\sffamily\large #1}}
+    \vspace{0.5em}
+}
+
+\newcommand{\technote}[1]{
+    \begin{secondarybox}[title=Note technique]
+        \sffamily\small #1
+    \end{secondarybox}
+}
+
+\newcommand{\keypoint}[1]{
+    \begin{primarybox}[title=Point clé]
+        \sffamily #1
+    \end{primarybox}
+}
+
+% Command for code snippets
+\newcommand{\codesnippet}[2]{
+    \begin{tcolorbox}[
+        colback=darktext!5!white,
+        colframe=darktext!50!white,
+        arc=3pt,
+        title=\textcolor{darktext}{\textbf{\sffamily #1}},
+        fonttitle=\small\sffamily,
+        boxrule=0.5pt,
+        left=5pt,right=5pt,top=5pt,bottom=5pt
+    ]
+    \small\ttfamily #2
+    \end{tcolorbox}
+}
+
+% Command for API endpoint documentation
+\newcommand{\apiendpoint}[4]{
+    \begin{tcolorbox}[
+        enhanced,
+        colback=lightgray,
+        colframe=tertiary,
+        arc=3pt,
+        title=\textcolor{white}{\textbf{\sffamily #1 #2}},
+        fonttitle=\sffamily,
+        coltitle=white,
+        colbacktitle=tertiary,
+        boxrule=0.5pt,
+        left=5pt,right=5pt,top=5pt,bottom=5pt
+    ]
+    \small\sffamily
+    \textbf{Description:} #3 \\
+    \textbf{Réponse:} \texttt{#4}
+    \end{tcolorbox}
+}
+
+% Command for feature showcase
+\newcommand{\featureshowcase}[3]{
+    \begin{minipage}{\textwidth}
+        \begin{minipage}{0.65\textwidth}
+            \begin{secondarybox}[title=#1]
+                \sffamily #2
+            \end{secondarybox}
+        \end{minipage}
+        \hfill
+        \begin{minipage}{0.3\textwidth}
+            \begin{imagebox}
+                \includegraphics[width=\textwidth]{#3}
+            \end{imagebox}
+        \end{minipage}
+    \end{minipage}
+}
+
+% Command for technology badge
+\newcommand{\techbadge}[2]{
+    \tikz[baseline=(char.base)]{
+        \node[
+            fill=#2!10,
+            draw=#2,
+            rounded corners=3pt,
+            inner sep=2pt,
+            text=#2
+        ] (char) {#1};
+    }
+}
+
+% Command for step-by-step process
+\newcommand{\processstep}[2]{
+    \begin{tcolorbox}[
+        enhanced,
+        colback=white,
+        colframe=secondary,
+        leftrule=3pt,
+        rightrule=0pt,
+        toprule=0pt,
+        bottomrule=0pt,
+        arc=0pt,
+        left=8pt
+    ]
+        \textbf{\sffamily\textcolor{secondary}{Étape #1:}} \sffamily #2
+    \end{tcolorbox}
+}
+
+% Command for comparison table header row
+\newcommand{\comparisonheader}[3]{
+    \rowcolor{primary!20}
+    \textbf{\sffamily #1} & \textbf{\sffamily #2} & \textbf{\sffamily #3} \\
+}
+
+% Command for bullet with icon
+\newcommand{\iconbullet}[2]{
+    \noindent\textcolor{primary}{#1} \sffamily #2 \\
+}
+
+% Command for feature card
+\newcommand{\featurecard}[4]{
+    \begin{tcolorbox}[
+        enhanced,
+        colback=#3!5,
+        colframe=#3,
+        arc=5pt,
+        title=\textcolor{white}{#1 \textbf{\sffamily #2}},
+        fonttitle=\sffamily,
+        coltitle=white,
+        colbacktitle=#3,
+        boxrule=0.5pt,
+        left=8pt,right=8pt,top=8pt,bottom=8pt
+    ]
+        \sffamily\small #4
+    \end{tcolorbox}
+}
+}
+
+% Command for timeline entry
+\newcommand{\timelineentry}[3]{
+    \begin{minipage}{\textwidth}
+        \begin{tikzpicture}
+            \filldraw[fill=#3!20, draw=#3] (0,0) circle (0.4cm);
+            \node at (0,0) {\textcolor{#3}{\Large\bfseries #1}};
+            \draw[thick, #3] (0.4,0) -- (0.7,0);
+            \node[anchor=west, text width=\textwidth-1cm] at (0.8,0) {\textbf{\sffamily\textcolor{#3}{#2}}};
+        \end{tikzpicture}
+    \end{minipage}
+    \vspace{0.2cm}
+}
+
+% Command for technology stack item
+\newcommand{\techstack}[3]{
+    \begin{tikzpicture}
+        \node[
+            draw=#2,
+            fill=#2!5,
+            rounded corners=5pt,
+            minimum width=3cm,
+            minimum height=1.5cm
+        ] {
+            \begin{tabular}{c}
+                \textcolor{#2}{#1} \\
+                \textbf{\sffamily\small #3}
+            \end{tabular}
+        };
+    \end{tikzpicture}
+}
