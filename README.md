@@ -453,14 +453,38 @@ mvn surefire-report:report
 
 ## 📚 API Documentation
 
-### Authentication Endpoints
+### 🔍 Swagger Documentation
+
+The API is fully documented using OpenAPI (Swagger). Access the interactive documentation at:
+
+```
+http://localhost:8080/swagger-ui.html
+```
+
+Features of the API documentation:
+- 📝 **Interactive Testing**: Try out API endpoints directly from the browser
+- 🔐 **Authentication Support**: Test authenticated endpoints using JWT tokens
+- 📋 **Request Examples**: Pre-filled example requests for all endpoints
+- 📊 **Response Schemas**: Detailed response structure documentation
+- 🧪 **Validation Rules**: Input validation requirements for each parameter
+
+#### Using Swagger with Authentication
+
+1. First, use the `/api/auth/login` endpoint to get a JWT token (no authentication required)
+2. Click the "Authorize" button at the top of the Swagger UI
+3. Enter your token in the format: `Bearer your_token_here`
+4. All authenticated API calls will now include your token
+
+### API Endpoints
+
+#### Authentication Endpoints
 ```
 POST /api/auth/login          # User login
 POST /api/auth/logout         # User logout
 GET  /api/auth/profile        # Get user profile
 ```
 
-### Customer Management
+#### Customer Management
 ```
 GET    /api/customers         # Get all customers
 POST   /api/customers         # Create customer
@@ -469,7 +493,7 @@ PUT    /api/customers/{id}    # Update customer
 DELETE /api/customers/{id}    # Delete customer
 ```
 
-### Account Management
+#### Account Management
 ```
 GET    /api/accounts          # Get all accounts
 POST   /api/accounts          # Create account
@@ -478,7 +502,7 @@ PUT    /api/accounts/{id}     # Update account
 DELETE /api/accounts/{id}     # Delete account
 ```
 
-### Banking Operations
+#### Banking Operations
 ```
 POST /api/operations/debit    # Debit operation
 POST /api/operations/credit   # Credit operation

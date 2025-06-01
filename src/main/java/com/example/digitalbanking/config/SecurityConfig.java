@@ -19,11 +19,39 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.info.Contact;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
+import io.swagger.v3.oas.annotations.ExternalDocumentation;
+
 import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
+@OpenAPIDefinition(
+    info = @Info(
+        title = "Digital Banking API", 
+        version = "v1.0", 
+        description = "API documentation for the Digital Banking application",
+        contact = @Contact(name = "Digital Banking Support Team", email = "support@digitalbanking.com")
+    ),
+    security = @SecurityRequirement(name = "bearerAuth"),
+    externalDocs = @ExternalDocumentation(
+        description = "Digital Banking Documentation",
+        url = "https://digitalbanking.com/docs"
+    )
+)
+@SecurityScheme(
+    name = "bearerAuth",
+    type = SecuritySchemeType.HTTP,
+    scheme = "bearer",
+    bearerFormat = "JWT",
+    description = "JWT token authentication. Obtain your token from the /api/auth/login endpoint."
+)
 public class SecurityConfig {
 
     private final UserDetailsServiceImpl userDetailsService;
@@ -38,7 +66,12 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Enable CORS with custom configuration
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                .requestMatchers("/api/auth/**", 
+                                 "/swagger-ui/**", 
+                                 "/v3/api-docs/**",
+                                 "/swagger-ui.html", // Permit swagger-ui.html
+                                 "/webjars/**") // Permit webjars for Swagger UI
+                .permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
